@@ -57,7 +57,8 @@ var C = {
         rt:3,
         splat:4,
         splash:5,
-        dead:6
+        fall:6,
+        dead:7
     },
     sound:{
         music1:0,

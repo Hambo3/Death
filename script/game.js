@@ -44,11 +44,13 @@
             this.assets = new ObjectPool(); 
 
             //add some pickups to the pool
-            // for (var i = 0; i < 2; i++) {
-            //     d = new Grunt(0,0, {src:assets.items[0], col:C.col.items,size:0.8}, C.ass.pickup);
-            //     d.enabled = false;
-            //     this.assets.Add(d);
-            // }
+            for (var i = 0; i < 16; i++) {
+                var x = Util.RndI(6,60);
+                var y = Util.RndI(6,48);
+                d = new Grunt(x*32, y*32, {src:assets.items[0], col:C.col.items,size:0.8}, C.ass.pickup);
+                d.enabled = true;
+                this.assets.Add(d);
+            }
             
             if(full){
                 //this.multiplier = 0.7;
@@ -85,31 +87,7 @@
 
             this.SetCamera(this.player);
             this.scene.ScrollTo(this.camera.x, this.camera.y, false);  
-            //this.takePic = 64;
         };
-
-        // this.steal = function(){
-        //     var spawn = map.levels[this.level > this.maxLevel ? this.maxLevel : this.level].spawn;
-        //     var garage = [0,0,0,0,0,0,1,1,1,1,2,2,3];
-        //     garage.sort(() => Math.random() - 0.5);
-
-        //     var stolen = [];
-        //     this.stolenRaw = [];
-
-        //     for (var i = 0; i < 6; i++) {
-        //         var n = garage[i];
-        //         this.stolenRaw.push(n);
-        //         stolen.push({index:n, asset:n, value:Util.RndI(1,4) * ((n+1)*1500)});
-        //     }
-
-        //     this.stolenRaw.sort((a, b) => a - b);
-
-        //     for (var i = 0; i < spawn.home.length; i++) {
-        //         stolen[i].index = spawn.home[i].x*32;
-        //     }
-
-        //     this.player.bases = stolen;
-        // }
 
         this.reset(true);
     };
@@ -181,13 +159,6 @@
                         Renderer.Set(this.zoom);
                         this.scene.Set(this.zoom);
                     }
-
-                    // if(Util.OneIn(this.takePic)){
-                    //     var os = this.scene.ScrollOffset(); 
-                    //     var pt = Util.IsoPoint(this.player.x-os.x, this.player.y-os.y);
-                    //     this.photo = Renderer.Get(pt.x-100,pt.y-100,200,200);
-                    //     this.takePic = 500;
-                    // }
                     
                     if(this.player.death){
                         if(this.player.death == C.act.dead){
@@ -217,7 +188,6 @@
                             Music.Stop(C.sound.music1);
                         }
                         this.level++;
-                        //this.steal();
                     }
                     break; 
                 case MODE.level:
@@ -225,11 +195,11 @@
                         this.scene.Map(map.levels[this.level > this.maxLevel ? this.maxLevel : this.level]);
                         this.gameState= MODE.game;
                         this.fadeIn = true;
-                        var vans = this.assets.Get([C.ass.van]);
+                        //var vans = this.assets.Get([C.ass.van]);
 
-                        for(var e = 0; e < vans.length; e++) {
-                            vans[e].enabled = false;
-                        } 
+                        // for(var e = 0; e < vans.length; e++) {
+                        //     vans[e].enabled = false;
+                        // } 
                         if(this.enableSound){
                             Music.Play(C.sound.music1);
                         }
@@ -286,8 +256,10 @@
             for(var e = 0; e < asses.length; e++) {
                 var assPt = {x:asses[e].x, y:asses[e].y}; 
 
-                if((assPt.x > plrPt.x - 96 && assPt.x < plrPt.x + 96) && (assPt.y > plrPt.y && assPt.y < plrPt.y +64)){
-                    asses[e].alpha = 0.5;
+                var xd = Math.abs(assPt.x - plrPt.x);
+                var yd = assPt.y - plrPt.y;
+                if((xd<96) && (yd>0 && yd<64)){
+                    asses[e].alpha = xd<32 ? 0.5 : xd<64 ? 0.65 : 0.8;
                 }
                 else{
                     asses[e].alpha = 1;

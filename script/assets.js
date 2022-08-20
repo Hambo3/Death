@@ -22,7 +22,7 @@
         this.action = C.act.up;
         this.motion = 0;
         this.death = 0;
-        this.lives = 3;
+        this.lives = 1;
         this.score = 0;
         this.count = 0;
         this.onHold = 0;
@@ -119,12 +119,23 @@
                                 if(t == 6){
                                     this.action = C.act.splash;
                                     //Sound.Play(C.sound.splash);
-                                    this.reset(C.act.dead);
+                                    this.reset(C.act.fall);
+
+                                    for(var i=0;i<this.anims.length;i++){
+                                        this.anims[i].mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
+                                    }
                                 }
                                 else if(t == 4 || t == 5){//water
-                                    //if(this.riding == null){
-                                    //    this.riding = {log:null};
-                                    //}
+                                    this.action = C.act.splash;
+                                    Sound.Play(C.sound.splash);
+                                    this.reset(C.act.splash);
+                                    this.anims[0].enabled = false;
+            
+                                    for(var i=0;i<16;i++){
+                                        this.anims.push(
+                                            new Grunt(this.x, this.y, {src:assets.square, col:C.col.splash, size:0.3}, 0,
+                                                {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200}, true));    
+                                    }
                                 }
                             }
                         }
@@ -172,12 +183,6 @@
         },
         Collider: function(perps){
             if(this.death == 0){
-                // if(this.riding && this.riding.log && !this.riding.log.enabled){
-                //     this.action = C.act.splash;
-                //     Sound.Play(C.sound.splash);
-                //     this.reset(C.act.splash);
-                // }
-
                 if(this.jumping){
                     //determine if can jump
                     var d = AssetUtil.Collisions(this, perps, this.jumping);
@@ -190,15 +195,7 @@
                         }
                     }
                     
-                } 
-
-                //var cars = perps.filter(l => l.enabled && l.type == C.ass.car);
-                //var d1 = AssetUtil.Collisions({x:this.x,y:this.y,width:32,length:32}, cars, false);
-
-                // if(d1)
-                // {
-                //     Sound.Play(C.sound.beep);
-                // }               
+                }              
 
                 //collect pickup
                 var d = AssetUtil.Collisions(this, perps, false);
@@ -212,34 +209,14 @@
                     Sound.Play(C.sound.pickup);
                 }
 
-                if(this.riding && this.riding.log == null){
-                    if(d && (d.type == C.ass.log )){
-                        this.riding.log = d;
-                        this.riding.offset = {x:this.x-d.x, y:this.y-d.y};
-                    }
-                    else{
-                        this.action = C.act.splash;
-                        Sound.Play(C.sound.splash);
-                        this.reset(C.act.splash);
-                        this.anims[0].enabled = false;
-
-                        for(var i=0;i<16;i++){
-                            this.anims.push(
-                                new Grunt(this.x, this.y, {src:assets.square, col:C.col.splash, size:0.3}, 0,
-                                    {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200}, true));    
-                        }
-                    }
-                }
-                else if(d && (d.type == C.ass.car )){
-                    this.action = C.act.splat;
-                    Sound.Play(C.sound.splat);
-                    this.reset(C.act.splat);
-                    for(var i=0;i<this.anims.length;i++){
-                        this.anims[i].mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
-                    }
-                }
-                
-
+                // if(d && (d.type == C.ass.car )){
+                //     this.action = C.act.splat;
+                //     Sound.Play(C.sound.splat);
+                //     this.reset(C.act.splat);
+                //     for(var i=0;i<this.anims.length;i++){
+                //         this.anims[i].mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
+                //     }
+                // }               
             }
         },
         Render: function(os, scale){

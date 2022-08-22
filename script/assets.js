@@ -91,11 +91,11 @@
                     if(!this.jumping)
                     {
                         var inp = {
-                            up: (input.isSingle('UP') || input.isSingle('W') ),
-                            down: (input.isSingle('DOWN') || input.isSingle('S') ),
-                            left: (input.isSingle('LEFT') || input.isSingle('A') ),
-                            right: (input.isSingle('RIGHT') || input.isSingle('D') )
-                        };     
+                            up:Input.Up(),
+                            down:Input.Down(),
+                            left:Input.Left(),
+                            right:Input.Right()
+                        };
                         AssetUtil.InputLogic(inp, this, speed, 32);  
 
                         if(this.jumping){
@@ -389,7 +389,7 @@
 
 //a character that can be a tree or simple animatable object
 (function() {
-    function Grunt(x, y, b, type, motion, die) {
+    function Grunt(x, y, b, type, motion, die, stack) {
         this.type = type;
         this.enabled = true;
         this.x = x;
@@ -402,6 +402,8 @@
         this.body = b;        
         this.die = die;
         this.alpha = 1;
+        this.stack = stack || 1;
+        this.ht = 16;
     };
 
 Grunt.prototype = {
@@ -449,9 +451,11 @@ Grunt.prototype = {
 
         var pt = Util.IsoPoint(x*scale, y*scale);
 
-        Renderer.PolySprite(pt.x-os.x, pt.y-os.y-(this.z*scale), 
-            this.body.src, 
-            this.body.col, this.body.size, this.alpha );      
+        for (var i = 0; i < this.stack; i++) {
+            Renderer.PolySprite(pt.x-os.x, pt.y-os.y-(this.z*scale)-(this.ht*i), 
+                this.body.src, 
+                this.body.col, this.body.size, this.alpha );    
+        }  
     }
 };
 

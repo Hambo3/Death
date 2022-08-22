@@ -4,8 +4,11 @@
         var i =0;
         var set = [];
         for (let i = 0; i < 11; i++) {
-            set.push( {src:assets.tile, col:i});           
+            set.push( {src:assets.tile, col:i});
         }
+
+        set[4]={src:assets.tile2, col:4};
+        set.push( {src:assets.tile1, col:11});  
 
         this.maxLevel = 1;
         this.level = level;    
@@ -19,13 +22,10 @@
 
         this.titleDood = {src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man};
         this.zoom = 1;
-        //this.photo = null;
         this.enableSound = true;
         this.zoomIn = 0;
         this.zoomOut = 0;
         this.isoIn = 0;
-        //this.pickup = 500;
-        //this.logPickup = false;
         this.firstTime = true;
 
         this.time=0;
@@ -34,7 +34,6 @@
         this.SetCamera = function(p){
             this.camera = p;
         }
-
 
         this.reset = function(full){
             Renderer.Set(this.zoom);
@@ -47,7 +46,7 @@
             for (var i = 0; i < 16; i++) {
                 var x = Util.RndI(6,60);
                 var y = Util.RndI(6,48);
-                d = new Grunt(x*32, y*32, {src:assets.items[0], col:C.col.items,size:0.8}, C.ass.pickup);
+                d = new Grunt(x*32, y*32, {src:assets.tile1, col:C.col.items,size:0.8}, C.ass.pickup);
                 d.enabled = true;
                 this.assets.Add(d);
             }
@@ -63,7 +62,7 @@
 
             for (var i = 0; i < spawn.wall.length; i++) {
                 var d = new Grunt(spawn.wall[i].x*tw, spawn.wall[i].y*th, 
-                    {src:assets.wall, col:C.col.base}, C.ass.null );
+                    {src:assets.wall16, col:C.col.base}, C.ass.null, null,false,4 );
                 this.assets.Add(d);
             }
 
@@ -96,20 +95,20 @@
         Update: function(dt){
 
             if(this.fadeOut){
-                this.scCol = Util.SLerp(this.scCol, 1, 0.1);
+                this.scCol = Util.SLerp(this.scCol, 1, 0.05);
                 if(this.scCol > 0.9){
                     this.fadeOut = false;
                 }                
             }
             if(this.fadeIn){
-                this.scCol = Util.SLerp(this.scCol, 0, 0.1);
+                this.scCol = Util.SLerp(this.scCol, 0, 0.05);
                 if(this.scCol < 0.1){
                     this.fadeIn = false;
                 }                
             }
             switch(this.gameState){
                 case MODE.title:
-                    if(input.isUp("SPACE")){
+                    if(Input.Fire1()){   
                         this.gameState= MODE.start;
                         this.timer = 192;
                         this.level = 0;
@@ -117,27 +116,20 @@
                         Renderer.Set(this.zoom);
                         this.scene.Set(this.zoom);
                         this.reset(true);
-                        //this.steal();
-                        input.Clr();
                     }
                     break; 
-                    case MODE.start:
-                        if(--this.timer==0){
-                            this.gameState= MODE.game;
-                            this.fadeIn = true;
-                            // var vans = this.assets.Get([C.ass.van, C.ass.pickup]);
-    
-                            // for(var e = 0; e < vans.length; e++) {
-                            //     vans[e].enabled = false;
-                            // } 
-    
-                            if(this.enableSound){
-                                Music.Play(C.sound.music1);
-                            }
-                            this.player.start(2);
-                            this.timer = 64;
+                case MODE.start:
+                    if(--this.timer==0){
+                        this.gameState= MODE.game;
+                        this.fadeIn = true;
+
+                        if(this.enableSound){
+                            //Music.Play(C.sound.music1);
                         }
-                        break; 
+                        this.player.start(2);
+                        this.timer = 64;
+                    }
+                    break; 
                 case MODE.game:
                     if(this.zoomIn > 0){
                         this.zoom = Util.Lerp(this.zoom, this.zoomIn, 0.005);
@@ -163,10 +155,9 @@
                     if(this.player.death){
                         if(this.player.death == C.act.dead){
                             if(this.enableSound){
-                                Music.Stop(C.sound.music1);
+                                //Music.Stop(C.sound.music1);
                             }
                             this.timer = 64;
-                            input.Clr();
                             this.gameState = MODE.over;
                             this.news3 = Util.RndI(1,ON.length);
                             this.count=64;
@@ -179,13 +170,11 @@
                     }
 
                     if(this.player.LevelCompleted()){
-
-                        input.Clr();
                         this.gameState = MODE.level;
                         this.fadeOut = true;
                         this.timer = 192;                        
                         if(this.enableSound){
-                            Music.Stop(C.sound.music1);
+                            //Music.Stop(C.sound.music1);
                         }
                         this.level++;
                     }
@@ -201,19 +190,18 @@
                         //     vans[e].enabled = false;
                         // } 
                         if(this.enableSound){
-                            Music.Play(C.sound.music1);
+                            //Music.Play(C.sound.music1);
                         }
                         this.reset();
                         this.player.start(1);
                     }
                     break;
                 case MODE.over:
-                    if(input.isUp("SPACE")){
+                    if(Input.Fire1()){
                         this.gameState= MODE.title;
                         Renderer.Set(1);
                         this.scene.Set(1);
                         this.scCol = 1; 
-                        input.Clr();
                     }
                     break;
             }
@@ -254,15 +242,15 @@
             var plrPt = {x:this.player.x, y:this.player.y};
 
             for(var e = 0; e < asses.length; e++) {
-                var assPt = {x:asses[e].x, y:asses[e].y}; 
+                asses[e].alpha = 1;
+                if(asses[e].type == C.ass.null){
+                    var assPt = {x:asses[e].x, y:asses[e].y}; 
 
-                var xd = Math.abs(assPt.x - plrPt.x);
-                var yd = assPt.y - plrPt.y;
-                if((xd<96) && (yd>0 && yd<64)){
-                    asses[e].alpha = xd<32 ? 0.5 : xd<64 ? 0.65 : 0.8;
-                }
-                else{
-                    asses[e].alpha = 1;
+                    var xd = Math.abs(assPt.x - plrPt.x);
+                    var yd = assPt.y - plrPt.y;
+                    if((xd<96) && (yd>0 && yd<128)){
+                        asses[e].alpha = xd<32 ? 0.1 : xd<64 ? 0.2 : 0.3;
+                    }
                 }
                 asses[e].Render(mp, this.zoom);
             } 
@@ -321,7 +309,8 @@
                     Renderer.Text("DAY "+ (this.level+1), 160, 100, 8,1,PAL[C.pal.title]);  
                     break;   
                 case MODE.over:
-
+                    Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
+                    Renderer.Text("GAME OVER NOB ED", 160, 100, 8,1,PAL[C.pal.title]);  
                     break;   
 
             }

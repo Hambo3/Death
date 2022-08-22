@@ -1,113 +1,67 @@
-//key down events
-(function() {
-    var pressedKeys = {};
-    var releasedKeys = {};
-    var keyUpevent;
-    var touchEvent;
+class KeyInput{
+    
+    static pres = [];//pressed
+    static rel = [];//released
 
-    function pressed(e, status) {
-        var k = setKey(e, status);
-        pressedKeys[k] = status;
+    static IsDown(key) {
+        return this.pres[key];
+    }
+
+    static IsSingle(key) {
+        var k = this.pres[key] && (this.rel[key] !== null || this.rel[key]);
+        if(k){
+            this.rel[key] = null;
+        }
+        return k;
+    }
+    
+    static Pressed(e, status) {
+        var k = this.SetKey(e, status);
+        this.pres[k] = status;
         return k;
     }
 
-    function released(e, status) {
-        var k = setKey(e, status);
-        releasedKeys[k] = status;
+    static Released(e, status) {
+        var k = this.SetKey(e, status);
+        this.rel[k] = status;
     }
 
-    function setKey(event, status) {
-        var code = event.keyCode;
-        var key;
-
-        switch(code) {
-        case 13:
-            key = 'RET'; break;
-        case 27:
-            key = 'ESC'; break;                
-        case 32:
-            key = 'SPACE'; break;
-        case 37:
-            key = 'LEFT'; break;
-        case 38:
-            key = 'UP'; break;
-        case 39:
-            key = 'RIGHT'; break;
-        case 40:
-            key = 'DOWN'; break;                
-        default:
-            key = String.fromCharCode(code);
-        }
-        return key;
+    static SetKey(event, status) {
+        return event.code;
     }
-    function touchMove(e) {
-        if (e.touches) {
-            for (var i = 0; i < e.touches.length; i++) {
-                var touch = e.touches[i];
-                var tx = touch.pageX;// - canvas.offsetLeft;
-                var ty = touch.pageY;// - canvas.offsetTop;
+}
 
-                if (touchEvent) {
-                    touchEvent(tx, ty);
+class GamePad extends KeyInput{
+    static pads = () => (navigator.getGamepads ? Array.from(navigator.getGamepads()) : []).filter(x => !!x);
+
+    static Btn(i) {
+        const pads = this.pads();
+        for (var p = 0; p < pads.length; p++) {
+            try {
+                if (pads[p].buttons[i].pressed) {
+                    return true;
                 }
-            }
-            e.preventDefault();
-        }   
-    }
-
-    function touchEnd(e) {
-        released(e, true);
-        pressedKeys = {};
-    }
-    document.addEventListener('keydown', function(e) {
-        pressed(e, true);    
-    });
-
-    document.addEventListener('keyup', function(e) {
-        var k = pressed(e, false);
-        released(e, true);
-        if (keyUpevent) {
-            keyUpevent(k);
-        }
-    });
-
-    window.addEventListener('blur', function() {
-        pressedKeys = {};
-    });
-
-    window.input = {
-        onKeyUp: function (handler) {
-            keyUpevent = handler;
-        },
-        isSingle: function(key) {
-            var k = pressedKeys[key.toUpperCase()] && (releasedKeys[key.toUpperCase()] !== null || releasedKeys[key.toUpperCase()]);
-            if(k){
-                releasedKeys[key.toUpperCase()] = null;
-            }
-            return k;
-        },
-        isDown: function(key) {
-            return pressedKeys[key.toUpperCase()];
-        },
-        isUp: function(key) {
-            var k = releasedKeys[key.toUpperCase()];
-            return k;
-        },
-        Clr: function() {
-            releasedKeys = [];
-        },
-        set: function (key) {
-            pressedKeys[key] = true;
-            if (keyUpevent) {
-                keyUpevent(key);
-            }
-        },
-        initTouch: function (el, handler) {
-            touchEvent = handler;
-            el.addEventListener("touchstart", touchMove);
-            el.addEventListener("touchmove", touchMove);
-            el.addEventListener("touchend", touchEnd);
-            el.addEventListener("touchcancel", touchEnd);
+            } catch (e) {}
         }
     };
-})();
+    
+    static Joy (i, v) {
+        const pads = this.pads();
+        for (var p = 0; p < pads.length; p++) {
+            try {
+                if (Math.abs(v - pads[p].axes[i]) < 0.5) {
+                    return true;
+                }
+            } catch (e) {}
+        }
+    };
+}
+
+class Input extends GamePad{
+    static Up(){return this.IsSingle('ArrowUp') || this.IsDown('KeyW') ||this.Btn(12) || this.Joy(1,-1)}
+    static Down(){return this.IsSingle('ArrowDown') || this.IsDown('KeyS') || this.Btn(13) || this.Joy(1,1)}
+    static Left(){return this.IsSingle('ArrowLeft') || this.IsDown('KeyA') || this.Btn(14) || this.Joy(0,-1)}
+    static Right(){return this.IsSingle('ArrowRight') || this.IsDown('KeyD') || this.Btn(15) || this.Joy(0,1)}
+    static Fire1(){return this.IsSingle('KeyK') || this.Btn(1)}
+    static Fire2(){return this.IsSingle('KeyL') || this.Btn(2)}
+}

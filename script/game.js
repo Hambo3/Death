@@ -97,12 +97,14 @@
             if(this.fadeOut){
                 this.scCol = Util.SLerp(this.scCol, 1, 0.05);
                 if(this.scCol > 0.9){
+                    this.scCol = 1;
                     this.fadeOut = false;
                 }                
             }
             if(this.fadeIn){
                 this.scCol = Util.SLerp(this.scCol, 0, 0.05);
                 if(this.scCol < 0.1){
+                    this.scCol = 0;
                     this.fadeIn = false;
                 }                
             }
@@ -158,8 +160,9 @@
                                 //Music.Stop(C.sound.music1);
                             }
                             this.timer = 64;
-                            this.gameState = MODE.over;
-                            this.news3 = Util.RndI(1,ON.length);
+                            this.gameState = MODE.deathInfo;
+                            this.fadeOut = true;
+                            //this.news3 = Util.RndI(1,ON.length);
                             this.count=64;
                         }
                         else{
@@ -169,41 +172,56 @@
                          }
                     }
 
-                    if(this.player.LevelCompleted()){
-                        this.gameState = MODE.level;
-                        this.fadeOut = true;
-                        this.timer = 192;                        
-                        if(this.enableSound){
-                            //Music.Stop(C.sound.music1);
-                        }
-                        this.level++;
-                    }
+                    // if(this.player.LevelCompleted()){
+                    //     this.gameState = MODE.level;
+                    //     this.fadeOut = true;
+                    //     this.timer = 192;                        
+                    //     if(this.enableSound){
+                    //         //Music.Stop(C.sound.music1);
+                    //     }
+                    //     this.level++;
+                    // }
                     break; 
-                case MODE.level:
-                    if(--this.timer == 0){                        
-                        this.scene.Map(map.levels[this.level > this.maxLevel ? this.maxLevel : this.level]);
-                        this.gameState= MODE.game;
-                        this.fadeIn = true;
-                        //var vans = this.assets.Get([C.ass.van]);
-
-                        // for(var e = 0; e < vans.length; e++) {
-                        //     vans[e].enabled = false;
-                        // } 
-                        if(this.enableSound){
-                            //Music.Play(C.sound.music1);
-                        }
-                        this.reset();
-                        this.player.start(1);
+                case MODE.deathInfo:
+                    if(--this.timer == 0){
+                        this.timer = 192;  
+                        this.gameState = MODE.postInfo;
                     }
                     break;
-                case MODE.over:
-                    if(Input.Fire1()){
-                        this.gameState= MODE.title;
+                case MODE.postInfo:
+                    if(--this.timer == 0){
+                        this.timer = 192;  
+                        this.gameState = MODE.title;
                         Renderer.Set(1);
                         this.scene.Set(1);
                         this.scCol = 1; 
                     }
                     break;
+                // case MODE.level:
+                //     if(--this.timer == 0){                        
+                //         this.scene.Map(map.levels[this.level > this.maxLevel ? this.maxLevel : this.level]);
+                //         this.gameState= MODE.game;
+                //         this.fadeIn = true;
+                //         //var vans = this.assets.Get([C.ass.van]);
+
+                //         // for(var e = 0; e < vans.length; e++) {
+                //         //     vans[e].enabled = false;
+                //         // } 
+                //         if(this.enableSound){
+                //             //Music.Play(C.sound.music1);
+                //         }
+                //         this.reset();
+                //         this.player.start(1);
+                //     }
+                //     break;
+                // case MODE.over:
+                //     if(Input.Fire1()){
+                //         this.gameState= MODE.title;
+                //         Renderer.Set(1);
+                //         this.scene.Set(1);
+                //         this.scCol = 1; 
+                //     }
+                //     break;
             }
 
             var asses = this.assets.Get();
@@ -304,14 +322,22 @@
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
                     Renderer.Text("DAY "+ (this.level + 1), 160, 100, 8,1,PAL[C.pal.title]); 
                     break;
-                case MODE.level:
+                case MODE.deathInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.Text("DAY "+ (this.level+1), 160, 100, 8,1,PAL[C.pal.title]);  
-                    break;   
-                case MODE.over:
+                    Renderer.Text("YOU FELL TO YOUR DEATH", 160, 100, 8,1,PAL[C.pal.title]);  
+                    break;     
+                case MODE.postInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.Text("GAME OVER NOB ED", 160, 100, 8,1,PAL[C.pal.title]);  
-                    break;   
+                    Renderer.Text("WHAT DID YOU EXPECT", 160, 100, 8,1,PAL[C.pal.title]);  
+                    break; 
+                // case MODE.level:
+                //     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
+                //     Renderer.Text("DAY "+ (this.level+1), 160, 100, 8,1,PAL[C.pal.title]);  
+                //     break;   
+                // case MODE.over:
+                //     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
+                //     Renderer.Text("GAME OVER NOB ED", 160, 100, 8,1,PAL[C.pal.title]);  
+                //     break;   
 
             }
         }

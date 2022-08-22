@@ -30,10 +30,8 @@ var map = {
 		screen:{width:25, height:19}			
 	},
 	colliders:{
-		home:[7],
 		hit:[8,9,10],
-		over:[4,5,6],
-		fend:[8]
+		over:[4,5,6]
 	},
 	levels:[
 		{
@@ -99,10 +97,8 @@ var map = {
 					{x:4,y:6},{x:29,y:6},
 					{x:4,y:12},{x:4,y:13},{x:4,y:14},{x:29,y:12},{x:29,y:13},{x:29,y:14},
 					{x:4,y:22},{x:4,y:21},{x:4,y:20},{x:29,y:22},{x:29,y:21},{x:29,y:20}
-				],
-				home:[{x:9,y:5},{x:12,y:5},{x:15,y:5},{x:18,y:5},{x:21,y:5},{x:24,y:5}]
-			}
-		}
+				]
+			}	}
 	]
 };
 
@@ -124,8 +120,6 @@ function Start(canvasBody)
 			{x1:32,x2:32, y1:32,y2:96});
 
 		Sound = new TinySound();
-
-
 		init();
 	}
 }

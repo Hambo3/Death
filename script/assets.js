@@ -50,12 +50,12 @@
             this.dx = 0;
             this.dy = 0;
             this.z = 0;
-            this.riding = null;
+            //this.riding = null;
         }
         this.start = function(restart){
             if(restart){
                 if(restart>1){
-                    this.lives = 3;
+                    this.lives = 1;
                     this.score = 0;   
                 }
                 this.recovery = 0;                         

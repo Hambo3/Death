@@ -77,7 +77,9 @@ var MODE = {
     start:1,
     game:2,    
     level:3,
-    over:4
+    deathInfo:4,
+    postInfo:5,
+    over:9
 }
 
 var COLS = [

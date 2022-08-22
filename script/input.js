@@ -8,9 +8,9 @@ class KeyInput{
     }
 
     static IsSingle(key) {
-        var k = this.pres[key] && (this.rel[key] !== null || this.rel[key]);
+        var k = this.pres[key] && (this.pres[key] !== null || this.pres[key]);
         if(k){
-            this.rel[key] = null;
+            this.pres[key] = null;
         }
         return k;
     }
@@ -34,34 +34,52 @@ class KeyInput{
 class GamePad extends KeyInput{
     static pads = () => (navigator.getGamepads ? Array.from(navigator.getGamepads()) : []).filter(x => !!x);
 
-    static Btn(i) {
-        const pads = this.pads();
-        for (var p = 0; p < pads.length; p++) {
-            try {
-                if (pads[p].buttons[i].pressed) {
-                    return true;
-                }
-            } catch (e) {}
-        }
+    static Btn(i, p) {
+        const pads = this.pads();        
+        try {
+            if (pads[p].buttons[i].pressed) {
+                return true;
+            }
+        } catch (e) {}
     };
     
-    static Joy (i, v) {
+    static JoyUp(p)
+    {
+        return this.Joy(1,-1, p) || this.Btn(12,p);
+    }
+    static JoyDown(p)
+    {
+        return this.Joy(1,1, p) || this.Btn(13,p);
+    }
+    static JoyLeft(p)
+    {
+        return this.Joy(0,-1, p) || this.Btn(14,p);
+    }
+    static JoyRight(p)
+    {
+        return this.Joy(0,1, p) || this.Btn(15,p);
+    }
+    static Joy (i, v, p) {
         const pads = this.pads();
-        for (var p = 0; p < pads.length; p++) {
-            try {
-                if (Math.abs(v - pads[p].axes[i]) < 0.5) {
-                    return true;
-                }
-            } catch (e) {}
-        }
+        try {
+            if (Math.abs(v - pads[p].axes[i]) < 0.5) {
+                return true;
+            }
+        } catch (e) {}
     };
+
+    static Pads(){
+        return this.pads();
+    }
 }
 
 class Input extends GamePad{
-    static Up(){return this.IsSingle('ArrowUp') || this.IsDown('KeyW') ||this.Btn(12) || this.Joy(1,-1)}
-    static Down(){return this.IsSingle('ArrowDown') || this.IsDown('KeyS') || this.Btn(13) || this.Joy(1,1)}
-    static Left(){return this.IsSingle('ArrowLeft') || this.IsDown('KeyA') || this.Btn(14) || this.Joy(0,-1)}
-    static Right(){return this.IsSingle('ArrowRight') || this.IsDown('KeyD') || this.Btn(15) || this.Joy(0,1)}
-    static Fire1(){return this.IsSingle('KeyK') || this.Btn(1)}
-    static Fire2(){return this.IsSingle('KeyL') || this.Btn(2)}
+    static Up(){return this.IsDown('KeyW') || this.IsDown('ArrowUp') || this.JoyUp(0)}
+    static Down(){return this.IsDown('KeyS') || this.IsDown('ArrowDown') || this.JoyDown(0)}
+    static Left(){return this.IsDown('KeyA') || this.IsDown('ArrowLeft') || this.JoyLeft(0)}
+    static Right(){return this.IsDown('KeyD') || this.IsDown('ArrowRight') || this.JoyRight(0)}
+    static Fire1(){return this.IsDown('KeyV') || this.Btn(0,0)}
+    static Fire2(){return this.IsDown('KeyB') || this.Btn(1,0)}
 }
+
+

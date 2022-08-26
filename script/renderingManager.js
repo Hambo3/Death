@@ -91,43 +91,57 @@ var Rendering = function (context, screen, border) {
     //assumes upper
     function txt(str, xs, ys, size, sc, col) {
 
+        str = !isNaN(str) ? ""+str : str;
         ctx.fillStyle = col || '#000000';
-        cr = xs;
 
-        for (i = 0; i < str.length; i++) {
-            xp = 0;
-            yp = 0;
-            mx = 0; 
+        var cr = xs;
+        var blockSize = {x:0,y:0};
 
-            c = str.charAt(i);                     
-            if(c == '+')
+        var ln = str.length||1;
+        for (var i = 0; i < ln; i++) {
+            var xp = 0;
+            var yp = 0;
+            var mx = 0; 
+
+            var chr = str.length ? str.charAt(i) : str;
+            if(chr == '|')
             {
                 ys += (size*8);
                 xs=cr;
+                blockSize.x = 0;
+                blockSize.y = (size*8);
             }
             else
             {
-                l = FONT[str.charAt(i)];
-
+                var l = FONT[chr];
+                var chrSize = {x:0,y:0};
                 for (var r = 0; r < l.length; r++) 
-                {                
+                {
+                    chrSize.x = 0;
                     xp = 0;
-                    row = l[r];
+                    var row = l[r];
                     for (var c = 0; c < row.length; c++) 
                     {                    
-                        szx = (sc && c==row.length-1) ? size*2 : size;
-                        szy = (sc && r==l.length-1) ? size*2 : size;
+                        var szx = (sc && c==row.length-1) ? size*2 : size;
+                        var szy = (sc && r==l.length-1) ? size*2 : size;
                         if (row[c]) {
                             ctx.fillRect(Math.round(xp + xs), Math.round(yp + ys), szx, szy);
                         }
                         xp += szx;
+                        chrSize.x += szx;
                     }
                     mx = xp>mx ? xp : mx;
                     yp += szy;
+                    chrSize.y += szy;
                 }
+                blockSize.x += chrSize.x + size;
+                blockSize.y = chrSize.y;
+
                 xs += mx + size; 
             }
         }
+
+        return blockSize;
     } 
 
     function box(x,y,w,h,c){
@@ -135,58 +149,7 @@ var Rendering = function (context, screen, border) {
         ctx.fillRect(x, y, w, h);
     }
 
-    function gray(p) {
-        var d = p.data;
-        for (var i=0; i<d.length; i+=4) {
-          var r = d[i],g = d[i+1],b = d[i+2];
-          var v = 0.2126*r + 0.7152*g + 0.0722*b;
-          d[i] = d[i+1] = d[i+2] = v
-        }
-        return p;
-      }
-
-    function para(tx,x, y, len, w){
-        var t=0;
-        var c = r = 0;
-        for (let i = 0; i < len; i++) {
-            txt(tx[t], x + c, y + r, 3, 0);
-            t=t==tx.length-1?0:t+1;
-            c+=12;
-            if(c > w){
-                c=0;
-                r+=18;
-            }
-        }
-    }
-
     return {
-        News:function(w,h, pic,win){
-            box(0,0,w, h, PAL[C.pal.white]);
-            box(4,4,w-8, h-8, PAL[C.pal.black]);
-            box(8,8,w-16, h-16, PAL[C.pal.white]);
-            box(8,140,w-16, 2, PAL[C.pal.black]);
-            txt(Util.dateToYMD(), 700, 12, 2,0);
-            txt("DAILY BLAH", 200, 60, 10,0);
-            txt("PROBABLY ENTIRELY FACTUAL", 240, 120, 3,0);
-
-            txt(win[0], 20, 154, 6,0);            
-            txt(win[1], 18, 195, 3,0);
-            txt(win[2], 500, 195, 3,0);
-
-
-            para(ON[0], 18, 280, 80, 250 ); 
-            para(ON[0], 18, 400, 200, 250 );
-            para(ON[0], 280, 400, 100, 200 );
-            para(ON[0], 500, 360, 240, 290 );
-
-            txt("PRESS [SPACE]", 580, 580, 4,0);
-            if(pic){
-                ctx.putImageData(gray(pic), 280, 195);
-            }
-        },
-        Get:function(x,y, w,h){
-            return ctx.getImageData(x, y, w, h);
-        },
         Set:function(n){
             scale = n;
         },
@@ -213,7 +176,7 @@ var Rendering = function (context, screen, border) {
             poly2D(x,y,poly,coli,size);
         },
         Text: function(text, x, y, size, sc, col){
-            txt(text, x, y, size, sc, col);
+            return txt(text, x, y, size, sc, col);
         }
     }
 };

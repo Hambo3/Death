@@ -2,14 +2,27 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: hsl(200, 80%, 0%);
+  background-color: #555;
 }
 
 #canvasBody canvas {
   cursor: none;
-  image-rendering: optimizeSpeed;
-  max-width: 100%;
+  width: 100%;
   display: block;
   margin: auto;
   background: #000;
+}
+
+div#canvasBody {
+  width: 100vw;
+  height: 76vw;
+  max-height: 100vh;
+  max-width: 131.57vh;
+  margin: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: grey;
 }

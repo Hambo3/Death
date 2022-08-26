@@ -3,12 +3,15 @@
 
         var i =0;
         var set = [];
-        for (let i = 0; i < 11; i++) {
+        for (let i = 0; i < 14; i++) {
             set.push( {src:assets.tile, col:i});
         }
 
-        set[4]={src:assets.tile2, col:4};
-        set.push( {src:assets.tile1, col:11});  
+        set[10].src=assets.tile1;
+        set[11].src=assets.tile1;
+        set[5].src=assets.tile2;
+        set[7].src=assets.tile2;
+        //set.push( {src:assets.tile1, col:11});  
 
         this.maxLevel = 1;
         this.level = level;    
@@ -25,7 +28,7 @@
         this.enableSound = true;
         this.zoomIn = 0;
         this.zoomOut = 0;
-        this.isoIn = 0;
+        //this.isoIn = 0;
         this.firstTime = true;
 
         this.time=0;
@@ -35,7 +38,13 @@
             this.camera = p;
         }
 
+        this.TitleTxt = [new Display(ST[0], PAL[C.pal.title],0.9, 0.01 ),
+                        new Display(ST[1], PAL[C.pal.title],0.9, 0.01 ),
+                        new Display(OV[0], PAL[C.pal.title],0.9, 0.01 ),
+                        new Display(OV[1], PAL[C.pal.title],0.9, 0.01 )];
+        
         this.reset = function(full){
+            ISO = 0.75;
             Renderer.Set(this.zoom);
             this.scene.Set(this.zoom);
 
@@ -46,7 +55,7 @@
             for (var i = 0; i < 16; i++) {
                 var x = Util.RndI(6,60);
                 var y = Util.RndI(6,48);
-                d = new Grunt(x*32, y*32, {src:assets.tile1, col:C.col.items,size:0.8}, C.ass.pickup);
+                d = new Grunt(x*32, y*32, {src:assets.square, col:C.col.items,size:0.8}, C.ass.pickup);
                 d.enabled = true;
                 this.assets.Add(d);
             }
@@ -62,7 +71,7 @@
 
             for (var i = 0; i < spawn.wall.length; i++) {
                 var d = new Grunt(spawn.wall[i].x*tw, spawn.wall[i].y*th, 
-                    {src:assets.wall16, col:C.col.base}, C.ass.null, null,false,4 );
+                    {src:assets.wall16, col:C.col.wall}, C.ass.null, null,false,4 );
                 this.assets.Add(d);
             }
 
@@ -110,9 +119,10 @@
             }
             switch(this.gameState){
                 case MODE.title:
-                    if(Input.Fire1()){   
+                    if(Input.Fire1() || Input.IsSingle("Space")){   
                         this.gameState= MODE.start;
-                        this.timer = 192;
+                        this.timer = 190;
+                        this.line = ST.length-1;
                         this.level = 0;
                         this.zoom=1;
                         Renderer.Set(this.zoom);
@@ -121,18 +131,31 @@
                     }
                     break; 
                 case MODE.start:
-                    if(--this.timer==0){
-                        this.gameState= MODE.game;
-                        this.fadeIn = true;
-
-                        if(this.enableSound){
-                            //Music.Play(C.sound.music1);
-                        }
-                        this.player.start(2);
-                        this.timer = 64;
+                    if(this.TitleTxt[0].Update(dt))
+                    {
+                        if(--this.timer==0){
+                            this.timer = 190;
+                            this.gameState = MODE.ready;
+                        }                        
                     }
+
                     break; 
+                case MODE.ready:
+                    if(this.TitleTxt[1].Update(dt))
+                    {
+                        if(--this.timer==0){
+                            this.gameState = MODE.game;
+                            this.fadeIn = true;
+
+                            this.player.start(2);
+                            this.timer = 64;
+                            ISO = 0.95;
+                        }                        
+                    }
+
+                    break;     
                 case MODE.game:
+
                     if(this.zoomIn > 0){
                         this.zoom = Util.Lerp(this.zoom, this.zoomIn, 0.005);
                         ISO = Util.Lerp(ISO, 0.70, 0.005);
@@ -145,7 +168,7 @@
                     }
                     if(this.zoomOut > 0){
                         this.zoom = Util.Lerp(this.zoom, this.zoomOut, 0.05);
-                        ISO = Util.Lerp(ISO, 0.95, 0.05);
+                        ISO = Util.Lerp(ISO, 0.85, 0.05);
                         if(this.zoom < (this.zoomOut - 0.01))
                         {
                             this.zoomOut = 0;
@@ -156,72 +179,37 @@
                     
                     if(this.player.death){
                         if(this.player.death == C.act.dead){
-                            if(this.enableSound){
-                                //Music.Stop(C.sound.music1);
-                            }
                             this.timer = 64;
                             this.gameState = MODE.deathInfo;
                             this.fadeOut = true;
-                            //this.news3 = Util.RndI(1,ON.length);
                             this.count=64;
                         }
                         else{
                             this.zoomIn = 2.5;
                             this.zoomOut = 0;
-                            this.isoIn = 0.82;
+                            //this.isoIn = 0.82;
                          }
                     }
-
-                    // if(this.player.LevelCompleted()){
-                    //     this.gameState = MODE.level;
-                    //     this.fadeOut = true;
-                    //     this.timer = 192;                        
-                    //     if(this.enableSound){
-                    //         //Music.Stop(C.sound.music1);
-                    //     }
-                    //     this.level++;
-                    // }
                     break; 
                 case MODE.deathInfo:
-                    if(--this.timer == 0){
-                        this.timer = 192;  
-                        this.gameState = MODE.postInfo;
+                    if(this.TitleTxt[2].Update(dt))
+                    {
+                        if(Input.Fire1() || Input.IsSingle("Space")){
+                            this.gameState = MODE.postInfo;
+                        }
                     }
                     break;
                 case MODE.postInfo:
-                    if(--this.timer == 0){
-                        this.timer = 192;  
-                        this.gameState = MODE.title;
-                        Renderer.Set(1);
-                        this.scene.Set(1);
-                        this.scCol = 1; 
+                    if(this.TitleTxt[3].Update(dt))
+                    {
+                        if(Input.Fire1() || Input.IsSingle("Space")){
+                            this.gameState = MODE.title;
+                            Renderer.Set(1);
+                            this.scene.Set(1);
+                            this.scCol = 1; 
+                        }
                     }
                     break;
-                // case MODE.level:
-                //     if(--this.timer == 0){                        
-                //         this.scene.Map(map.levels[this.level > this.maxLevel ? this.maxLevel : this.level]);
-                //         this.gameState= MODE.game;
-                //         this.fadeIn = true;
-                //         //var vans = this.assets.Get([C.ass.van]);
-
-                //         // for(var e = 0; e < vans.length; e++) {
-                //         //     vans[e].enabled = false;
-                //         // } 
-                //         if(this.enableSound){
-                //             //Music.Play(C.sound.music1);
-                //         }
-                //         this.reset();
-                //         this.player.start(1);
-                //     }
-                //     break;
-                // case MODE.over:
-                //     if(Input.Fire1()){
-                //         this.gameState= MODE.title;
-                //         Renderer.Set(1);
-                //         this.scene.Set(1);
-                //         this.scCol = 1; 
-                //     }
-                //     break;
             }
 
             var asses = this.assets.Get();
@@ -242,7 +230,7 @@
             var mp = this.scene.ScrollOffset(); 
 
             //get everythign except logs and ptext for somereason
-            var rest = this.assets.Get([C.ass.log,C.ass.ptext],true);
+            var rest = this.assets.Get([C.ass.ptext],true);
 
             rest.sort(function(a, b){
                 var p1 = Util.IsoPoint(a.x,a.y);
@@ -274,33 +262,24 @@
             } 
 
             Renderer.Box(0,0,this.screen.w, 48, "rgba(0, 0, 0, 0.7)");
-            //Renderer.Text("ASSETS", 140, 2, 3, 0, PAL[C.pal.white]);  
-            //Renderer.Text("TIME", this.screen.w-200, 2, 3, 0, PAL[C.pal.white]);  
-            //Renderer.Text("£"+AssetUtil.NumericText(this.player.score), 140, 24, 4, 0, PAL[C.pal.white]); 
-            //Renderer.Text(this.time>0 ? AssetUtil.NumericText(parseInt(this.time/60),2) : "00", this.screen.w-200, 24, 4, 0, PAL[C.pal.white]); 
-
             if(this.player.lives>0){
                 for (var i = 0; i < this.player.lives-1; i++) {
                     Renderer.Sprite2D((i*16)+32,592,assets.lives, C.col.man,0.7);
                 }
             }
 
-            // for (var i = 0; i < this.level+1; i++) {
-            //     Renderer.Sprite2D(780-(i*24),592,assets.levels, C.col.car3,0.7);
-            // }   
-            
             switch(this.gameState){
                 case MODE.title:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    // Renderer.Text("ABCDEFGHIJKLMNOPQR", 40, 20, 6,1,PAL[C.pal.title]);  
-                    Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]);  
-
-                    ISO = 0.75;
+                    Renderer.Text("UNCERTAIN", 160, 60, 10,1,PAL[C.pal.title]);  
+                    Renderer.Text("DEATH", 240, 140, 12,1,PAL[C.pal.title]);  
+                    Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]); 
+                    
                     for (let i = 0; i < 3; i++) {
-                        Renderer.PolySprite(288+(i*110), 400, this.titleDood.src, this.titleDood.col+i, 2  );
-                        Renderer.PolySprite(288+(i*110), 400-82, assets.hat, C.col.black, 1.2  ); 
+                        Renderer.PolySprite(288+(i*110), 400, this.titleDood.src, this.titleDood.col, 2  );
+                        Renderer.PolySprite(288+(i*110), 400-82, assets.hat, C.col.hat, 1.2  ); 
                     }  
-                    break; 
+                    break;                     
                 case MODE.game:
                     if(this.scCol>0.1){
                         Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
@@ -320,24 +299,27 @@
                     break;                
                 case MODE.start:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.Text("DAY "+ (this.level + 1), 160, 100, 8,1,PAL[C.pal.title]); 
+                    Renderer.PolySprite(288, 400, this.titleDood.src, this.titleDood.col, 2  );   
+                    this.TitleTxt[0].Render(Renderer,{x:60,y:100});
+                    break;
+                case MODE.ready:
+                    Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
+                    this.TitleTxt[1].Render(Renderer,{x:60,y:100});
                     break;
                 case MODE.deathInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.Text("YOU FELL TO YOUR DEATH", 160, 100, 8,1,PAL[C.pal.title]);  
+                    this.TitleTxt[2].Render(Renderer,{x:60,y:100}); 
+                    if(this.TitleTxt[2].Done){
+                        Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]); 
+                    }
                     break;     
                 case MODE.postInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.Text("WHAT DID YOU EXPECT", 160, 100, 8,1,PAL[C.pal.title]);  
+                    this.TitleTxt[3].Render(Renderer,{x:60,y:100},8,1);
+                    if(this.TitleTxt[3].Done){
+                        Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]); 
+                    }
                     break; 
-                // case MODE.level:
-                //     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                //     Renderer.Text("DAY "+ (this.level+1), 160, 100, 8,1,PAL[C.pal.title]);  
-                //     break;   
-                // case MODE.over:
-                //     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                //     Renderer.Text("GAME OVER NOB ED", 160, 100, 8,1,PAL[C.pal.title]);  
-                //     break;   
 
             }
         }

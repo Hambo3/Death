@@ -63,7 +63,7 @@
             this.x = this.home.x;
             this.y = this.home.y;
             this.anims = [];
-            var h = new Grunt(this.x, this.y, {src:assets.hat, col:C.col.black, size:0.6}, C.ass.null);
+            var h = new Grunt(this.x, this.y, {src:assets.hat, col:C.col.hat, size:0.6}, C.ass.null);
             h.z = this.hat;//hat
             this.anims.push(h);
             this.enabled = true;
@@ -116,9 +116,9 @@
                         {
                             //check what landed on
                             if(map.colliders.over.indexOf(t) != -1){
-                                if(t == 6){
+                                if(t == 6 || t==7){
                                     this.action = C.act.splash;
-                                    //Sound.Play(C.sound.splash);
+                                    Sound.Play(C.sound.fall);
                                     this.reset(C.act.fall);
 
                                     for(var i=0;i<this.anims.length;i++){
@@ -201,22 +201,8 @@
                 var d = AssetUtil.Collisions(this, perps, false);
                 if(d && (d.type == C.ass.pickup )){
                     d.enabled = false;
-                    //var val = (Util.RndI(0,5)*50)+100;
-                    //this.score += val;
-
-                    //gameAsset.PickupScore(val, d.x-32, d.y-64, 4, {x: 0, y: -64, z:0, sz:2}, PAL[C.pal.pickup]);
-                
-                    Sound.Play(C.sound.pickup);
-                }
-
-                // if(d && (d.type == C.ass.car )){
-                //     this.action = C.act.splat;
-                //     Sound.Play(C.sound.splat);
-                //     this.reset(C.act.splat);
-                //     for(var i=0;i<this.anims.length;i++){
-                //         this.anims[i].mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
-                //     }
-                // }               
+                    Sound.Play(C.sound.collect);
+                }             
             }
         },
         Render: function(os, scale){
@@ -244,148 +230,6 @@
 
     window.Hero = Hero;
 })();
-
-
-//log
-(function() {
-    function Log(x, y, type, subtype, dir, speed) {
-        this.type = type;
-        this.enabled = true;
-
-        this.width = 16;
-        this.length = 16;
-        this.x = x;
-        this.y = y;
-        this.z = 0;
-        this.dx = 0;
-        this.dy = 0; 
-        this.size = 1;
-
-        this.accel;
-
-        //this.action = 0;
-        this.motion = 0;
-
-        this.body = [ 
-            [{src:assets.log.left, col: C.col.log}],
-            [{src:Util.OneOf([assets.log.mid,assets.log.mid2]), col: C.col.log}],
-            [{src:assets.log.right, col: C.col.log}]
-        ];
-
-        this.Set = function(speed, dir, subtype){
-            this.accel = speed * dir;
-            this.action = subtype;
-            //this.width = 32;
-        }
-  
-        this.Set(speed, dir, subtype);
-    };
-
-    Log.prototype = {
-        
-        Logic: function(dt){
-            var speed = this.accel * dt;
-            this.dx = -speed;
-        },
-        Update: function(dt){
-            this.x += this.dx;
-            this.y += this.dy;
-        },
-        Collider: function(perps){
-            var t = gameAsset.scene.Content(this.x, this.y);
-            if(map.colliders.fend.indexOf(t) != -1){  
-                this.enabled = false;
-            }
-        },
-        Render: function(os, scale){
-            var x = this.x;
-            var y = this.y;
-
-            var pt = Util.IsoPoint(x*scale, y*scale);
-    
-            Renderer.PolySprite(pt.x-os.x, pt.y-os.y-this.z, 
-                this.body[this.action][this.motion].src, 
-                this.body[this.action][this.motion].col, this.size  );              
-        }
-    };
-
-    window.Log = Log;
-})();
-
-//car
-(function() {
-    function Car(x, y, type, dir, speed) {
-        this.type = type;
-        this.enabled = true;
-
-        this.width = 64;
-        this.length = 16;
-        this.x = x;
-        this.y = y;
-        this.z = 0;
-        this.dx = 0;
-        this.dy = 0; 
-        this.size = 1;
-
-        this.accel;
-
-        this.action = 0;
-        this.motion = 0;
-
-        this.body = [];
-
-        this.Set = function(speed, dir){
-            this.accel = speed * dir;
-            var t = Util.RndI(0,2);
-            if(t==0){
-                this.width=64;
-                this.body = [ 
-                    [{src:assets.car, col: Util.OneOf([C.col.car1,C.col.car2,C.col.car3,C.col.car4])}]
-                ];
-            }
-            else{
-                this.width=48;
-                this.body = [ 
-                    [{src:dir==1 ? assets.vanL :assets.vanR, col: Util.OneOf([C.col.car0,C.col.car4,C.col.car3])}]
-                ];                
-            }
-
-        }
-  
-        this.Set(speed, dir);
-    };
-
-    Car.prototype = {
-        
-        Logic: function(dt){
-            var speed = this.accel * dt;
-            this.dx = -speed;
-        },
-        Update: function(dt){
-            this.x += this.dx;
-            this.y += this.dy;
-        },
-        Collider: function(perps){
-            var t = gameAsset.scene.Content(this.x, this.y);
-            if(map.colliders.fend.indexOf(t) != -1){  
-                this.enabled = false;
-            }
-        },
-        Render: function(os, scale){
-            var x = this.x;
-            var y = this.y;
-
-            var pt = Util.IsoPoint(x*scale, y*scale);
-    
-            Renderer.PolySprite(pt.x-os.x, pt.y-os.y-this.z, 
-                this.body[this.action][this.motion].src, 
-                this.body[this.action][this.motion].col, this.size  );              
-        }
-    };
-
-    window.Car = Car;
-})();
-
 
 //a character that can be a tree or simple animatable object
 (function() {

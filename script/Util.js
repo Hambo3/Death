@@ -148,70 +148,6 @@ var AssetUtil = {
             }
         }
         return gameAsset.scene.Content(asset.x, asset.y);
-    },
-    CarSpawn: function(list, assets, type, dir, sz){
-
-        for (var i = 0; i < assets.length; i++) {
-            list.push(
-                {
-                    ready:0, 
-                    x:assets[i].x*sz, 
-                    y:assets[i].y*sz,
-                    rank:assets[i].rank,
-                    dir:dir,
-                    type:type
-                });
-        }  
-    },
-    Recoveries: function(arr, num){
- 
-        arr.sort(() => Math.random() - 0.5);
-        var list = arr.slice(0, num);
-        var m = [];
-        for(var j=0;j<list.length;j++){
-            m.push(
-                {
-                    found:false,
-                    x:list[j].x,
-                    y:list[j].y
-                });
-        }
-        return m;
-    },
-    VehicleSpeed: function(rank, type, multi){
-        var rate = {sp:0,min:0,max:0};
-
-        if(type==C.ass.car){
-            var r = CARSPEEDS[rank];
-            rate.sp = r.sp*multi;
-            rate.min = parseInt(r.min/multi);
-            rate.max = parseInt(r.max/multi);
-            
-        }
-        else{
-            rate = LOGSPEEDS[rank];
-        }        
-
-        return rate;
-    },
-    ScoreMoney: function(txts, score){
-        var tx = []
-        for(var j=0;j<txts.length;j++){
-            tx.push(txts[j].replace("{0}",score));
-        }
-        return tx;
-    },
-    NumericText: function(val,len){
-        if(len){
-            val = ("000000"+val).slice(-len);
-        }
-        else{
-            if (val < 100000) { len = 5; }
-            else if(val < 1000000){ len = 6; }
-            else{ len = 7; }
-        }
-        val = ("000000"+val).slice(-len);
-        return val;
     }
 
 }
@@ -244,6 +180,15 @@ var Util = {
     {
         return (end-start) * amt+start;
     },
+    InvLerp: function(start, end, amt)
+    {
+        return (amt-start) / (end - start);
+    },
+    Remap: function(origFrom, origTo, targetFrom, targetTo, value)
+    {
+        var rel = Util.InvLerp(origFrom, origTo, value);
+        return Util.Lerp(targetFrom, targetTo, rel);
+    },
     AbsDist: function(p1, p2){
         return Math.abs( p1 - p2);
     },   
@@ -270,14 +215,6 @@ var Util = {
             }
         }
         return arr;
-    },
-    dateToYMD: function() {
-        var date = new Date();
-        var strArray=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        var d = date.getDate();
-        var m = strArray[date.getMonth()];
-        var y = date.getFullYear();
-        return '' + (d <= 9 ? '0' + d : d) + ' ' + m + ' ' + y;
     }
 }
 

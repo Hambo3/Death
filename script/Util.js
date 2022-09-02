@@ -1,32 +1,32 @@
 var AssetUtil = {
-    Dir: function(perp, prot){
-        var inp = {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            d:0
-        };
-        var distx = Util.AbsDist( perp.x, prot.x);
-        var disty = Util.AbsDist( perp.y, prot.y);
-        inp.d = Util.PDist(distx, disty);
-        if(distx > disty){
-            if(perp.x > prot.x){
-                inp.right = true;
-            }
-            else if(perp.x < prot.x){
-                inp.left = true;      
-            }
-        }else{
-            if(perp.y > prot.y){
-                inp.down = true;           
-            }
-            else if(perp.y < prot.y){
-                inp.up = true;
-            }
-        }
-        return inp;
-    },
+    // Dir: function(perp, prot){
+    //     var inp = {
+    //         up: false,
+    //         down: false,
+    //         left: false,
+    //         right: false,
+    //         d:0
+    //     };
+    //     var distx = Util.AbsDist( perp.x, prot.x);
+    //     var disty = Util.AbsDist( perp.y, prot.y);
+    //     inp.d = Util.PDist(distx, disty);
+    //     if(distx > disty){
+    //         if(perp.x > prot.x){
+    //             inp.right = true;
+    //         }
+    //         else if(perp.x < prot.x){
+    //             inp.left = true;      
+    //         }
+    //     }else{
+    //         if(perp.y > prot.y){
+    //             inp.down = true;           
+    //         }
+    //         else if(perp.y < prot.y){
+    //             inp.up = true;
+    //         }
+    //     }
+    //     return inp;
+    // },
     RectHit: function (prot, perp){ //if 2 rects overlap
         prot.x -= (prot.width/2);
         prot.y -= (prot.length/2);
@@ -37,8 +37,9 @@ var AssetUtil = {
             prot.y < perp.y + perp.length &&
             prot.length + prot.y > perp.y);
     },    
-    Collisions: function(prot, perps, dest){
+    Collisions: function(prot, perps, dest, first){
 
+        var clx = [];
         for(var i = 0; i < perps.length; i++) {
             if(prot != perps[i]){
                 var p = {x:(dest) ? prot.dest.x : prot.x, y:(dest) ? prot.dest.y : prot.y, 
@@ -50,20 +51,23 @@ var AssetUtil = {
                     length: perps[i].length};
 
                 if(AssetUtil.RectHit(p, e)){
-                    return perps[i];
+                    clx.push(perps[i]);
+                    if(first){
+                        return clx;
+                    }
                 }
             }
         }            
 
-        return null;
+        return clx;
     },
-    WhichDir: function(src, list){
-        for(var i = 0; i < list.length; i++) {
-            if(src == list[i].v){
-                return list[i].r;
-            }
-        }
-    },
+    // WhichDir: function(src, list){
+    //     for(var i = 0; i < list.length; i++) {
+    //         if(src == list[i].v){
+    //             return list[i].r;
+    //         }
+    //     }
+    // },
     InputLogic: function(inp, prop, speed, step){
         var x = prop.x;
         var y = prop.y;
@@ -189,16 +193,16 @@ var Util = {
         var rel = Util.InvLerp(origFrom, origTo, value);
         return Util.Lerp(targetFrom, targetTo, rel);
     },
-    AbsDist: function(p1, p2){
-        return Math.abs( p1 - p2);
-    },   
-    Dist: function(x1,y1,x2,y2){
-        var x = x2 - x1, y = y2 - y1;
-        return Util.PDist(x, y);
-    },
-    PDist: function(x, y){        
-        return Math.sqrt(x*x + y*y);
-    },
+    // AbsDist: function(p1, p2){
+    //     return Math.abs( p1 - p2);
+    // },   
+    // Dist: function(x1,y1,x2,y2){
+    //     var x = x2 - x1, y = y2 - y1;
+    //     return Util.PDist(x, y);
+    // },
+    // PDist: function(x, y){        
+    //     return Math.sqrt(x*x + y*y);
+    // },
     IsoPoint: function(x, y)
     {
         return {x: x - (y * (1-ISO)), y: (y + (x * (1-ISO)))*ISO};
@@ -215,6 +219,57 @@ var Util = {
             }
         }
         return arr;
+    },
+    Unpack: function(zip){
+        var map = [];
+        var v, pts;
+        var sec = zip.split("|");
+        for(var i = 0; i < sec.length; i++){
+            pts= sec[i].split(",");
+            v = parseInt(pts[0]);
+            map.push(v);
+            if(pts.length > 1){                
+                for(var p = 1; p < pts[1]; p++){
+                    map.push(v);
+                }
+            }
+        }
+        var s = "";
+        for (var i = 0; i < map.length; i++) {
+            s+=map[i]+","           
+        }
+
+        return map;
+    },
+    Spawn: function (spawn, src, col, tw, tp, sz,l)
+    {
+        var items = [];
+        for (var i = 0; i < spawn.length; i++) {
+            var d = new Grunt(spawn[i].x*tw, spawn[i].y*tw, 
+                {src:Util.OneOf(src), col:col, size:sz||1}, tp, null,false, l );
+                items.push(d);
+        }
+        return items;
+    },
+    FreePoint:function(scene, assets, tw, safe){
+        var pt;
+        do{
+            pt = {
+                x:Util.RndI(10,139),
+                y:Util.RndI(10,169)
+            };
+            var t = scene.Content(pt.x*tw, pt.y*tw);
+            var dz = assets.filter(l => (l.x == pt.x*tw && l.y == pt.y*tw) );
+        }while(!safe.includes(t) || dz.length != 0);
+
+        return pt;
+    },
+    RndSpawn: function(scene,assets,num, src, col, tw, safe, tp, sz,l){
+        var spawn = [];
+        for (var i = 0; i < num; i++) {
+            spawn.push(Util.FreePoint(scene, assets, tw, safe));
+        }
+        return Util.Spawn(spawn, src, col, tw, tp, sz,l)
     }
 }
 
@@ -234,6 +289,9 @@ var ObjectPool = function () {
         },
         Add: function(obj){
             list.push(obj);         
+        },
+        Addm: function(arr){
+            list.push(...arr);         
         },
         Get: function(type, not){
             if(type){

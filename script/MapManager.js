@@ -1,10 +1,10 @@
 //handles map rendering and collisons
-var MapManager = function (mapdim, mapdata, set) {
+var MapManager = function (mapdim, mapdata, wd, ht, set) {
     var mapSize = mapdim;
-    var map = unpack(mapdata.data);
+    var map = mapdata;//Util.Unpack(mapdata.data);
 
-    var mapCols = mapdata.dim.width;
-    var mapRows = mapdata.dim.height;
+    var mapCols = wd;//mapdata.dim.width;
+    var mapRows = ht;//mapdata.dim.height;
 
     var mapWidth = mapCols * mapSize.tile.width;
     var mapHeight = mapRows * mapSize.tile.height;
@@ -16,29 +16,7 @@ var MapManager = function (mapdim, mapdata, set) {
 
     var logging = false;
     var tileset = set;
-    var zoom = 1;
 
-    function unpack(zip){
-        var map = [];
-        var v, pts;
-        var sec = zip.split("|");
-        for(var i = 0; i < sec.length; i++){
-            pts= sec[i].split(",");
-            v = parseInt(pts[0]);
-            map.push(v);
-            if(pts.length > 1){                
-                for(var p = 1; p < pts[1]; p++){
-                    map.push(v);
-                }
-            }
-        }
-        var s = "";
-        for (var i = 0; i < map.length; i++) {
-            s+=map[i]+","           
-        }
-
-        return map;
-    }
     function hpoint(p, w){
         return Math.floor(p / w);
     }		
@@ -55,7 +33,9 @@ var MapManager = function (mapdim, mapdata, set) {
         var cp = map[cell(x, y)];
         return cp;
     }    
-    
+    function setContent(x,y,c){
+        map[cell(x, y)] = c;
+    }  
     
     function render() {
         var m = 0;
@@ -80,21 +60,13 @@ var MapManager = function (mapdim, mapdata, set) {
                         tileset[p].src,
                         tileset[p].col, 1); 
                 }
-                else{
-                    // tc+=Renderer.PolyTile(
-                    //     pt.x-offset.x,
-                    //     pt.y-offset.y,
-                    //     tileset[p].src;  
-                }
              }
         }
     }
 
     return {  
         Map: function(data){
-            map = unpack(data.data);
-            mapCols = data.dim.width;
-            mapRows = data.dim.height;
+            map = data;
         },
         Cell: function(x, y, d){
             return {x:hpoint(x,d)*d, y:vpoint(y,d)*d};
@@ -104,11 +76,14 @@ var MapManager = function (mapdim, mapdata, set) {
         },
         Content: function (x, y) {
             return content(x, y);
+        }, 
+        SetContent: function (x, y, c) {
+            return setContent(x, y, c);
         },  
         ScrollOffset: function () {            
             return offset;
-        },  
-        ScrollTo: function(x, y,lerp){
+        },
+        ScrollTo: function(x, y,lerp, rate){
             var pt = Util.IsoPoint(x*zoom,y*zoom);
             var midx = screenWidth / 2;
             var midy = screenHeight / 2;
@@ -119,8 +94,8 @@ var MapManager = function (mapdim, mapdata, set) {
             var desty = (pt.y-midy);
     
             if(lerp){
-                destx = Util.Lerp(offset.x, destx, 0.04);
-                desty = Util.Lerp(offset.y, desty, 0.04);
+                destx = Util.Lerp(offset.x, destx, rate || 0.04);
+                desty = Util.Lerp(offset.y, desty, rate || 0.04);
             }
     
             if(destx > 64){

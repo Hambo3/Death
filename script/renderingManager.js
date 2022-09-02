@@ -60,13 +60,8 @@ var Rendering = function (context, screen, border) {
     }
 
     function side(x, y, pts, col, sz, a){
-
-        try {
-            var color = new Color(col, a);
-            ctx.fillStyle = color.RGBA();//col;   
-        } catch (error) {
-            console.log(error);
-        }
+        var color = new Color(col, a);
+        ctx.fillStyle = color.RGBA();//col;   
 
         ctx.beginPath();
         var pt = Util.IsoPoint(pts[0]*sz, pts[1]*sz);

@@ -1,9 +1,9 @@
 (function() {
     function Game(map, level) {
-
+        this.level = level;    
         var i =0;
         var set = [];
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 17; i++) {
             set.push( {src:assets.tile, col:i});
         }
 
@@ -13,9 +13,11 @@
         set[7].src=assets.tile2;
         //set.push( {src:assets.tile1, col:11});  
 
+        this.md = map.levels[this.level];
+        this.M = Util.Unpack(this.md.data);
         this.maxLevel = 1;
-        this.level = level;    
-        this.scene = new MapManager(map.size, map.levels[this.level], set);
+
+        this.scene = new MapManager(map.size, this.M, this.md.dim.width, this.md.dim.height, set);
         this.screen = {w:map.size.screen.width*map.size.tile.width, h:map.size.screen.height*map.size.tile.height};
 
         this.gameState = MODE.title;
@@ -23,13 +25,16 @@
         this.fadeOut = false;
         this.fadeIn = false;
 
-        this.titleDood = {src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man};
+        this.titleDood = [{src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man},
+                            {src:Util.Merge([assets.hero.bodyV,assets.hero.up]), col:C.col.man}];
         this.zoom = 1;
         this.enableSound = true;
         this.zoomIn = 0;
         this.zoomOut = 0;
         //this.isoIn = 0;
         this.firstTime = true;
+        this.pickup1 = 0;
+        this.pickup2 = 0;
 
         this.time=0;
 
@@ -43,49 +48,95 @@
                         new Display(OV[0], PAL[C.pal.title],0.9, 0.01 ),
                         new Display(OV[1], PAL[C.pal.title],0.9, 0.01 )];
         
+
+        this.Text = function(txt, x, y, size, motion, col){
+            var p = new PickupText(txt,x,y, size, col, motion, 64 );
+            this.assets.Add(p);
+        }
+
         this.reset = function(full){
             ISO = 0.75;
             Renderer.Set(this.zoom);
             this.scene.Set(this.zoom);
 
-            //this.carSpawn = [];
             this.assets = new ObjectPool(); 
-
-            //add some pickups to the pool
-            for (var i = 0; i < 16; i++) {
-                var x = Util.RndI(6,60);
-                var y = Util.RndI(6,48);
-                d = new Grunt(x*32, y*32, {src:assets.square, col:C.col.items,size:0.8}, C.ass.pickup);
-                d.enabled = true;
-                this.assets.Add(d);
-            }
-            
+            this.holes = [];
             if(full){
-                //this.multiplier = 0.7;
-                this.level = 0;
-                this.scene.Map(map.levels[this.level]);       
+                this.M = Util.Unpack(this.md.data);
+                this.scene.Map(this.M);
             }
             var spawn = map.levels[this.level > this.maxLevel ? this.maxLevel : this.level].spawn;
             var tw = map.size.tile.width;
             var th = map.size.tile.height;
 
-            for (var i = 0; i < spawn.wall.length; i++) {
-                var d = new Grunt(spawn.wall[i].x*tw, spawn.wall[i].y*th, 
-                    {src:assets.wall16, col:C.col.wall}, C.ass.null, null,false,4 );
-                this.assets.Add(d);
+            var col = this.md.dim.width;
+            var row = this.md.dim.height;
+
+            for(var r = 0; r < row; r++) 
+            {
+                for(var c = 0; c < col; c++) 
+                {
+                    var m = ((r) * col) + (c);
+                    var p = this.M[m];   
+
+                    var pt = { x:(c * tw)*1, y:(r * th)*1 };    
+
+                    var a=null,cl,n = null,typ = C.ass.hard;
+                    if(p == 14 || p == 15){
+                        a = Util.OneOf([assets.tree1, assets.tree2]);
+                        cl = C.col.tree;
+                    }
+                    if(p == 16){
+                        a = assets.wall16;
+                        cl = C.col.wall;
+                        n = 4;
+                        typ = C.ass.wall;
+                    }
+
+                    if(a){
+                        var d = new Grunt(pt.x, pt.y, 
+                            {src:a, col:cl}, typ, null,false, n );
+                        this.assets.Add(d);
+                    }
+                 }
             }
 
-            for (var i = 0; i < spawn.tree.length; i++) {
-                var d = new Grunt(spawn.tree[i].x*tw, spawn.tree[i].y*th, 
-                    {src:Util.OneOf([assets.tree1, assets.tree2]), col:C.col.tree}, C.ass.null);
-                this.assets.Add(d);
-            }
+            var d = Util.Spawn(spawn.wall, [assets.wall16], C.col.wall, tw, C.ass.wall, null, 4);
+            this.assets.Addm(d);
+            d= Util.Spawn(spawn.tree, [assets.tree1, assets.tree2], C.col.tree, tw, C.ass.hard);
+            this.assets.Addm(d);
+            d = Util.Spawn(spawn.sign, [assets.tile], C.col.sign, tw, C.ass.sign);
+            this.assets.Addm(d);
 
-            // AssetUtil.CarSpawn(this.carSpawn, spawn.carl, C.ass.car, 1, tw);
-            // AssetUtil.CarSpawn(this.carSpawn, spawn.carr, C.ass.car, -1, tw);
+            var asses = this.assets.Get();
+            d = Util.RndSpawn(this.scene, asses, 64, [assets.tree1, assets.tree2], C.col.tree, tw, [0,1], C.ass.hard);
+            this.assets.Addm(d);
+            //secret holes
+            //currently:
+            asses = this.assets.Get();
+            for (var i = 0; i < 200; i++) {
+                //var p = {x:59, y:92};//
+                // var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,10,12,13]);
+                // this.holes.push({x:p.x*tw, y:p.y*tw});
+                // asses.push(p);
+            }     
+            //var p = this.holes.push({x:59*tw, y:92*tw});
+            //    asses.push(p);
 
-            // AssetUtil.CarSpawn(this.carSpawn, spawn.logl, C.ass.log, 1, tw);            
-            // AssetUtil.CarSpawn(this.carSpawn, spawn.logr, C.ass.log, -1, tw);
+            //DEBUG      
+            // for (var i = 0; i < 200; i++) {
+            //     d = new Grunt(this.holes[i].x*32, this.holes[i].y*32, {src:assets.square, col:C.col.items,size:1}, C.ass.pickup);
+            //     d.enabled = true;
+            //     this.assets.Add(d);
+            // }
+            //this.holes.push({x:28,y:45});
+
+            //add some pickups to the pool
+            //breads
+            d = Util.RndSpawn(this.scene, asses, 32, [assets.square], C.col.items, tw, [0,1,2,3,10,11,12,13], C.ass.pickup1, 0.2);
+            this.assets.Addm(d);
+            d = Util.RndSpawn(this.scene, asses, 32, [assets.square], C.col.items, tw, [0,1,2,3,10,11,12,13], C.ass.pickup2, 0.4);
+            this.assets.Addm(d);
 
             if(full){
                 this.player = new Hero(spawn.plr.x*tw, spawn.plr.y*th);      
@@ -119,7 +170,8 @@
             }
             switch(this.gameState){
                 case MODE.title:
-                    if(Input.Fire1() || Input.IsSingle("Space")){   
+                    if(//Input.Fire1() || 
+                    Input.IsSingle("Space")){   
                         this.gameState= MODE.start;
                         this.timer = 190;
                         this.line = ST.length-1;
@@ -147,6 +199,7 @@
                             this.gameState = MODE.game;
                             this.fadeIn = true;
 
+                            Sound.Play(C.sound.wibble);
                             this.player.start(2);
                             this.timer = 64;
                             ISO = 0.95;
@@ -202,11 +255,19 @@
                 case MODE.postInfo:
                     if(this.TitleTxt[3].Update(dt))
                     {
-                        if(Input.Fire1() || Input.IsSingle("Space")){
+                        if(Input.Left()){
                             this.gameState = MODE.title;
                             Renderer.Set(1);
                             this.scene.Set(1);
                             this.scCol = 1; 
+                        }
+                        if(Input.Right()){
+                            this.gameState = MODE.game;
+                            this.fadeIn = true;
+                            Sound.Play(C.sound.wibble);
+                            this.player.start(2);
+                            this.timer = 64;
+                            ISO = 0.95;
                         }
                     }
                     break;
@@ -224,7 +285,7 @@
                 
                 asses[e].Update(dt);
             }        
-            this.scene.ScrollTo(this.camera.x, this.camera.y, true);            
+            this.scene.ScrollTo(this.camera.x, this.camera.y, true, this.player.death ? 0.1 : null);
         },
         Render: function(){   
             var mp = this.scene.ScrollOffset(); 
@@ -249,7 +310,7 @@
 
             for(var e = 0; e < asses.length; e++) {
                 asses[e].alpha = 1;
-                if(asses[e].type == C.ass.null){
+                if(asses[e].type == C.ass.wall){
                     var assPt = {x:asses[e].x, y:asses[e].y}; 
 
                     var xd = Math.abs(assPt.x - plrPt.x);
@@ -262,11 +323,14 @@
             } 
 
             Renderer.Box(0,0,this.screen.w, 48, "rgba(0, 0, 0, 0.7)");
-            if(this.player.lives>0){
-                for (var i = 0; i < this.player.lives-1; i++) {
-                    Renderer.Sprite2D((i*16)+32,592,assets.lives, C.col.man,0.7);
-                }
+
+            for (var i = 0; i < this.player.stones; i++) {
+                Renderer.Sprite2D((i*16)+32,10,assets.lives, C.col.man,0.7);
             }
+
+            for (var i = 0; i < this.player.bread; i++) {
+                Renderer.Sprite2D(580-(i*24),10,assets.levels, C.col.man,0.7);
+            } 
 
             switch(this.gameState){
                 case MODE.title:
@@ -276,21 +340,26 @@
                     Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]); 
                     
                     for (let i = 0; i < 3; i++) {
-                        Renderer.PolySprite(288+(i*110), 400, this.titleDood.src, this.titleDood.col, 2  );
+                        Renderer.PolySprite(288+(i*110), 400, this.titleDood[0].src, this.titleDood[0].col, 2  );
                         Renderer.PolySprite(288+(i*110), 400-82, assets.hat, C.col.hat, 1.2  ); 
                     }  
-                    break;                     
+                    break;
                 case MODE.game:
                     if(this.scCol>0.1){
-                        Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
+                        Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")"); 
                     }
-                    if(this.time <= 0){
-                        Renderer.Text("TIME UP", 300, 280, 8,1,PAL[C.pal.gameover]);
-                    }
+
                     if(this.firstTime){
                         Renderer.Text("  W", 240, 500, 5,1,PAL[C.pal.gameover]);
                         Renderer.Text("A S D", 240, 540, 5,1,PAL[C.pal.gameover]);
                         Renderer.Text("ARROWS", 450, 540, 5,1,PAL[C.pal.gameover]);
+                    }
+                    if(this.pickup1==1){
+                        Renderer.Text("K TO THROW STONE", 240, 500, 5,1,PAL[C.pal.gameover]);
+                    }
+                    if(this.pickup2==1){
+                        Renderer.Text("HOLD L AND MOVE TO", 240, 500, 5,1,PAL[C.pal.gameover]);
+                        Renderer.Text("DROP BREADCRUMB", 240, 540, 5,1,PAL[C.pal.gameover]);
                     }
 
                     if(this.player.lives == 0){
@@ -299,7 +368,10 @@
                     break;                
                 case MODE.start:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
-                    Renderer.PolySprite(288, 400, this.titleDood.src, this.titleDood.col, 2  );   
+                    Renderer.PolySprite(340, 300, assets.table, C.col.table, 2.5  );
+                    Renderer.PolySprite(340, 240, assets.pc, C.col.pc, 2.5  );
+                    Renderer.PolySprite(340, 364, this.titleDood[1].src, this.titleDood[1].col, 2  );
+
                     this.TitleTxt[0].Render(Renderer,{x:60,y:100});
                     break;
                 case MODE.ready:
@@ -317,7 +389,8 @@
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");
                     this.TitleTxt[3].Render(Renderer,{x:60,y:100},8,1);
                     if(this.TitleTxt[3].Done){
-                        Renderer.Text("PRESS [SPACE]", 300, 500, 4,0,PAL[C.pal.title]); 
+                        Renderer.Text("PRESS [LEFT]", 100, 500, 4,0,PAL[C.pal.title]); 
+                        Renderer.Text("PRESS [RIGHT]", 400, 500, 4,0,PAL[C.pal.title]); 
                     }
                     break; 
 

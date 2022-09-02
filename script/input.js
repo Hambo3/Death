@@ -78,8 +78,8 @@ class Input extends GamePad{
     static Down(){return this.IsSingle('KeyS') || this.IsSingle('ArrowDown') || this.Joy(0,1)}
     static Left(){return this.IsSingle('KeyA') || this.IsSingle('ArrowLeft') || this.Joy(0,2)}
     static Right(){return this.IsSingle('KeyD') || this.IsSingle('ArrowRight') || this.Joy(0,3)}
-    static Fire1(){return this.IsSingle('KeyV') || this.Btn(0,0)}
-    static Fire2(){return this.IsSingle('KeyB') || this.Btn(1,0)}
+    static Fire1(){return this.IsSingle('KeyK') || this.Btn(0,0)}
+    static Fire2(){return this.IsDown('KeyL') || this.Btn(1,0)}
 }
 
 

@@ -27,14 +27,16 @@
 
         this.titleDood = [{src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man},
                             {src:Util.Merge([assets.hero.bodyV,assets.hero.up]), col:C.col.man}];
+
+        this.princess = {src:Util.Merge([assets.hero.bodyV,assets.hero.down,assets.hair]), col:C.col.man};                    
+        this.treasure = {src:assets.square, col:C.col.man}; 
         this.zoom = 1;
         this.enableSound = true;
         this.zoomIn = 0;
         this.zoomOut = 0;
-        //this.isoIn = 0;
         this.firstTime = true;
-        this.pickup1 = 0;
-        this.pickup2 = 0;
+        this.pickupTxt = null;
+        this.helps = [1,1,1];
 
         this.time=0;
 
@@ -116,9 +118,9 @@
             asses = this.assets.Get();
             for (var i = 0; i < 200; i++) {
                 //var p = {x:59, y:92};//
-                // var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,10,12,13]);
-                // this.holes.push({x:p.x*tw, y:p.y*tw});
-                // asses.push(p);
+                var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,10,12,13]);
+                this.holes.push({x:p.x*tw, y:p.y*tw, e:1});
+                asses.push(p);
             }     
             //var p = this.holes.push({x:59*tw, y:92*tw});
             //    asses.push(p);
@@ -135,6 +137,8 @@
             //breads
             d = Util.RndSpawn(this.scene, asses, 32, [assets.square], C.col.items, tw, [0,1,2,3,10,11,12,13], C.ass.pickup1, 0.2);
             this.assets.Addm(d);
+
+            asses = this.assets.Get();
             d = Util.RndSpawn(this.scene, asses, 32, [assets.square], C.col.items, tw, [0,1,2,3,10,11,12,13], C.ass.pickup2, 0.4);
             this.assets.Addm(d);
 
@@ -143,6 +147,15 @@
             }
 
             this.assets.Add(this.player);   
+
+            //princess
+            d = new Grunt(59*32, 120*32, {src:this.princess.src, col:this.princess.col,size:1}, C.ass.hard);
+            d.enabled = true;
+            this.assets.Add(d); 
+            //treasure
+            d = new Grunt(63*32, 120*32, {src:this.treasure.src, col:this.treasure.col,size:1}, C.ass.hard);
+            d.enabled = true;
+            this.assets.Add(d); 
 
             this.SetCamera(this.player);
             this.scene.ScrollTo(this.camera.x, this.camera.y, false);  
@@ -170,8 +183,7 @@
             }
             switch(this.gameState){
                 case MODE.title:
-                    if(//Input.Fire1() || 
-                    Input.IsSingle("Space")){   
+                    if(Input.Fire1() || Input.IsSingle("Space")){   
                         this.gameState= MODE.start;
                         this.timer = 190;
                         this.line = ST.length-1;
@@ -209,6 +221,20 @@
                     break;     
                 case MODE.game:
 
+                    // if(Input.IsSingle("KeyI")){
+                    //     //this.zoom-=0.1;
+                    //     //Renderer.Set(this.zoom);
+                    //     //this.scene.Set(this.zoom);
+                    //     this.zoomIn = 2.5; 
+                    //     this.zoomOut = 0;
+                    // }
+                    // if(Input.IsSingle("KeyO")){
+                    //     // this.zoom+=0.1;
+                    //     // Renderer.Set(this.zoom);
+                    //     // this.scene.Set(this.zoom);
+                    //     this.zoomIn = 0; 
+                    //     this.zoomOut = 1;
+                    // }
                     if(this.zoomIn > 0){
                         this.zoom = Util.Lerp(this.zoom, this.zoomIn, 0.005);
                         ISO = Util.Lerp(ISO, 0.70, 0.005);
@@ -220,8 +246,8 @@
                         this.scene.Set(this.zoom);
                     }
                     if(this.zoomOut > 0){
-                        this.zoom = Util.Lerp(this.zoom, this.zoomOut, 0.05);
-                        ISO = Util.Lerp(ISO, 0.85, 0.05);
+                        this.zoom = Util.Lerp(this.zoom, this.zoomOut, 0.015);
+                        ISO = Util.Lerp(ISO, 0.85, 0.015);
                         if(this.zoom < (this.zoomOut - 0.01))
                         {
                             this.zoomOut = 0;
@@ -229,7 +255,14 @@
                         Renderer.Set(this.zoom);
                         this.scene.Set(this.zoom);
                     }
-                    
+                    if(this.player.reading>0){
+                        this.zoomIn = 2.5;
+                        this.zoomOut = 0;
+                    }
+                    else{
+                        this.zoomIn = 0;
+                        this.zoomOut = 1;
+                    }
                     if(this.player.death){
                         if(this.player.death == C.act.dead){
                             this.timer = 64;
@@ -240,7 +273,6 @@
                         else{
                             this.zoomIn = 2.5;
                             this.zoomOut = 0;
-                            //this.isoIn = 0.82;
                          }
                     }
                     break; 
@@ -266,6 +298,10 @@
                             this.fadeIn = true;
                             Sound.Play(C.sound.wibble);
                             this.player.start(2);
+                            //reset holes
+                            this.holes.forEach(h => {h.e = 1});
+                            this.M = Util.Unpack(this.md.data);
+                            this.scene.Map(this.M);
                             this.timer = 64;
                             ISO = 0.95;
                         }
@@ -285,7 +321,8 @@
                 
                 asses[e].Update(dt);
             }        
-            this.scene.ScrollTo(this.camera.x, this.camera.y, true, this.player.death ? 0.1 : null);
+            this.scene.ScrollTo(this.camera.x, this.camera.y, true, 
+                this.zoomOut>0 || this.zoomIn>0 ? 0.1 : null);
         },
         Render: function(){   
             var mp = this.scene.ScrollOffset(); 
@@ -322,14 +359,22 @@
                 asses[e].Render(mp, this.zoom);
             } 
 
+            if(this.player.reading){
+                Renderer.Box(200,400,380, 200, PAL[C.pal.sign]);   
+                Renderer.Text(signs[this.player.reading], 220, 420, 3, 0,PAL[C.pal.signtxt]);  
+            }
             Renderer.Box(0,0,this.screen.w, 48, "rgba(0, 0, 0, 0.7)");
 
             for (var i = 0; i < this.player.stones; i++) {
                 Renderer.Sprite2D((i*16)+32,10,assets.lives, C.col.man,0.7);
             }
 
-            for (var i = 0; i < this.player.bread; i++) {
-                Renderer.Sprite2D(580-(i*24),10,assets.levels, C.col.man,0.7);
+
+            var b = parseInt(this.player.bread/3);
+            var br = parseInt(this.player.bread%3);
+            b=br>0?b+1:b;
+            for (var i = 0; i < b; i++) {
+                Renderer.Sprite2D((i*24)+32,30,assets.levels[br>0 && i==b-1 ? br:0], C.col.man,0.7);
             } 
 
             switch(this.gameState){
@@ -350,21 +395,17 @@
                     }
 
                     if(this.firstTime){
-                        Renderer.Text("  W", 240, 500, 5,1,PAL[C.pal.gameover]);
-                        Renderer.Text("A S D", 240, 540, 5,1,PAL[C.pal.gameover]);
-                        Renderer.Text("ARROWS", 450, 540, 5,1,PAL[C.pal.gameover]);
+                        Renderer.Text("  W", 240, 500, 3,1,PAL[C.pal.gameover]);
+                        Renderer.Text("A S D", 240, 540, 3,1,PAL[C.pal.gameover]);
+                        Renderer.Text("ARROWS", 450, 540, 3,1,PAL[C.pal.gameover]);
                     }
-                    if(this.pickup1==1){
-                        Renderer.Text("K TO THROW STONE", 240, 500, 5,1,PAL[C.pal.gameover]);
-                    }
-                    if(this.pickup2==1){
-                        Renderer.Text("HOLD L AND MOVE TO", 240, 500, 5,1,PAL[C.pal.gameover]);
-                        Renderer.Text("DROP BREADCRUMB", 240, 540, 5,1,PAL[C.pal.gameover]);
+                    if(this.pickupTxt != null){
+                        Renderer.Text(this.pickupTxt, 240, 500, 3,1,PAL[C.pal.gameover]);
                     }
 
-                    if(this.player.lives == 0){
-                        Renderer.Text("GAME OVER", 160, 100, 8,1,PAL[C.pal.gameover]); 
-                    }
+                    // if(this.player.lives == 0){
+                    //     Renderer.Text("GAME OVER", 160, 100, 8,1,PAL[C.pal.gameover]); 
+                    // }
                     break;                
                 case MODE.start:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, "rgba(0, 0, 0, "+this.scCol+")");

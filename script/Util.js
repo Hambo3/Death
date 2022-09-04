@@ -1,32 +1,4 @@
 var AssetUtil = {
-    // Dir: function(perp, prot){
-    //     var inp = {
-    //         up: false,
-    //         down: false,
-    //         left: false,
-    //         right: false,
-    //         d:0
-    //     };
-    //     var distx = Util.AbsDist( perp.x, prot.x);
-    //     var disty = Util.AbsDist( perp.y, prot.y);
-    //     inp.d = Util.PDist(distx, disty);
-    //     if(distx > disty){
-    //         if(perp.x > prot.x){
-    //             inp.right = true;
-    //         }
-    //         else if(perp.x < prot.x){
-    //             inp.left = true;      
-    //         }
-    //     }else{
-    //         if(perp.y > prot.y){
-    //             inp.down = true;           
-    //         }
-    //         else if(perp.y < prot.y){
-    //             inp.up = true;
-    //         }
-    //     }
-    //     return inp;
-    // },
     RectHit: function (prot, perp){ //if 2 rects overlap
         prot.x -= (prot.width/2);
         prot.y -= (prot.length/2);
@@ -61,13 +33,6 @@ var AssetUtil = {
 
         return clx;
     },
-    // WhichDir: function(src, list){
-    //     for(var i = 0; i < list.length; i++) {
-    //         if(src == list[i].v){
-    //             return list[i].r;
-    //         }
-    //     }
-    // },
     InputLogic: function(inp, prop, speed, step){
         var x = prop.x;
         var y = prop.y;
@@ -75,34 +40,45 @@ var AssetUtil = {
         var dy = prop.dy;
 
         if( inp.up ) {
-            dy = -speed;
-            y = prop.y - step;
+            if(prop.action == C.act.up){
+                dy = -speed;
+                y = prop.y - step;
+                prop.action = C.act.up;
+            }
             prop.action = C.act.up;
         }
         else if(inp.down) {
-            dy = speed;
-            y = prop.y + step;
+            if(prop.action == C.act.dn){
+                dy = speed;
+                y = prop.y + step;
+            }
             prop.action = C.act.dn;
         }    
         else if(inp.left) {
-            dx = -speed;
-            x = prop.x - step;
+            if(prop.action == C.act.lt){
+                dx = -speed;
+                x = prop.x - step;
+            }
             prop.action = C.act.lt;
         }
         else if(inp.right) {
-            dx = speed;
-            x = prop.x + step;
+            if(prop.action == C.act.rt){
+                dx = speed;
+                x = prop.x + step;
+            }
             prop.action = C.act.rt;
         } 
 
-        if(x != prop.x || y != prop.y){
-            var c = gameAsset.scene.Content(x, y); //check for obstructions
-            if(map.colliders.hit.indexOf(c) == -1){  
-                prop.dest.x = x;
-                prop.dest.y = y;
-                prop.dx = dx;
-                prop.dy = dy;
-                prop.jumping = true;
+        if(prop.onHold<=0){
+            if(x != prop.x || y != prop.y){
+                var c = gameAsset.scene.Content(x, y); //check for obstructions
+                if(map.colliders.hit.indexOf(c) == -1){  
+                    prop.dest.x = x;
+                    prop.dest.y = y;
+                    prop.dx = dx;
+                    prop.dy = dy;
+                    prop.jumping = true;
+                }
             }
         }
     },
@@ -193,16 +169,6 @@ var Util = {
         var rel = Util.InvLerp(origFrom, origTo, value);
         return Util.Lerp(targetFrom, targetTo, rel);
     },
-    // AbsDist: function(p1, p2){
-    //     return Math.abs( p1 - p2);
-    // },   
-    // Dist: function(x1,y1,x2,y2){
-    //     var x = x2 - x1, y = y2 - y1;
-    //     return Util.PDist(x, y);
-    // },
-    // PDist: function(x, y){        
-    //     return Math.sqrt(x*x + y*y);
-    // },
     IsoPoint: function(x, y)
     {
         return {x: x - (y * (1-ISO)), y: (y + (x * (1-ISO)))*ISO};
@@ -241,12 +207,16 @@ var Util = {
 
         return map;
     },
+    IntTxt: function(txt, val){
+        return txt.replace("{0}",val);
+    },
     Spawn: function (spawn, src, col, tw, tp, sz,l)
     {
         var items = [];
         for (var i = 0; i < spawn.length; i++) {
             var d = new Grunt(spawn[i].x*tw, spawn[i].y*tw, 
                 {src:Util.OneOf(src), col:col, size:sz||1}, tp, null,false, l );
+                d.alt = spawn[i].i;
                 items.push(d);
         }
         return items;

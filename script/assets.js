@@ -30,9 +30,10 @@
         this.hat = 40;
         this.shadow = {src:assets.tile, col:C.col.shadow};
 
+        this.reading = 0;
         this.stones = 0;
         this.bread = 0;
-
+        this.readTimer = 0;
         this.body = [ 
             [{src:Util.Merge([assets.hero.bodyV,assets.hero.up]), col:C.col.man}],
             [{src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man}],
@@ -67,7 +68,7 @@
             this.anims = [];
             this.hat = 40;
             var h = new Grunt(this.x, this.y, {src:assets.hat, col:C.col.hat, size:0.6}, C.ass.null);
-            h.z = this.hat;//hat
+            h.z = this.hat;
             this.anims.push(h);
             this.enabled = true;
             this.action = C.act.up;
@@ -76,7 +77,9 @@
             gameAsset.zoomIn = 0;
             this.stones = 0;
             this.bread = 0;
-
+            this.reading = 0;
+            this.readTimer = 0;
+            gameAsset.pickupTxt = null;
             this.reset();
         }
         this.LevelCompleted = function(){
@@ -116,111 +119,110 @@
 
             if(this.death == 0)
             {
-                //if(this.onHold==0){
-                    if(!this.jumping)
-                    {
-                        var inp = {
-                            up:Input.Up(),
-                            down:Input.Down(),
-                            left:Input.Left(),
-                            right:Input.Right(),
-                            fire1:Input.Fire1(),
-                            fire2:Input.Fire2()
-                        };
+                if(!this.jumping)
+                {
+                    var inp = {
+                        up:Input.Up(),
+                        down:Input.Down(),
+                        left:Input.Left(),
+                        right:Input.Right(),
+                        fire1:Input.Fire1(),
+                        fire2:Input.Fire2()
+                    };
 
-                        if(inp.fire1 && this.stones>0){
-                            gameAsset.assets.Add(new Stone(this, this.x, this.y, {src:assets.square, col:C.col.items, size:0.2}, 
-                                         {x: this.action==C.act.rt ? 64 : this.action==C.act.lt ? -64 : 0, 
-                                          y: this.action==C.act.dn ? 64 : this.action==C.act.up ? -64 : 0, z:200},
-                                         {x: this.action==C.act.rt ? this.x+64 : this.action==C.act.lt ? this.x-64 : this.x, 
-                                          y: this.action==C.act.dn ? this.y+64 : this.action==C.act.up ? this.y-64 : this.y}));
-                            this.stones--;  
-                            if(gameAsset.pickup1==1){
-                                gameAsset.pickup1 = 2;
-                            }           
-                        }
-                        else
+                    if(inp.fire1 && this.stones>0){
+                        gameAsset.assets.Add(new Stone(this, this.x, this.y, {src:assets.square, col:C.col.items, size:0.2}, 
+                                        {x: this.action==C.act.rt ? 64 : this.action==C.act.lt ? -64 : 0, 
+                                        y: this.action==C.act.dn ? 64 : this.action==C.act.up ? -64 : 0, z:200},
+                                        {x: this.action==C.act.rt ? this.x+64 : this.action==C.act.lt ? this.x-64 : this.x, 
+                                        y: this.action==C.act.dn ? this.y+64 : this.action==C.act.up ? this.y-64 : this.y}));
+                        this.stones--;  
+                        if(gameAsset.pickupTxt!=null)
                         {
-                            AssetUtil.InputLogic(inp, this, speed, 32);  
+                            gameAsset.pickupTxt=null
                         }
-
-
-                        if(this.jumping){
-                            gameAsset.firstTime = false;
-
-                            if(inp.fire2 && this.bread>0)
-                            {
-                                gameAsset.assets.Add(
-                                    new Grunt(this.x, this.y-1, 
-                                        {src:assets.square, col:C.col.items, size:0.1}, C.ass.null, null,false, 0 )
-                                );
-                                this.bread--;
-                                if(gameAsset.pickup2==1){
-                                    gameAsset.pickup2 = 2;
-                                }
-                            }
-                        }
-
                     }
                     else
                     {
-                        var t = AssetUtil.HopLogic(this, 32, 12);
-                        if(!this.jumping)// landed
+                        AssetUtil.InputLogic(inp, this, speed, 32);  
+                    }
+
+
+                    if(this.jumping){                        
+                        gameAsset.firstTime = false;
+
+                        if(inp.fire2 && this.bread>0)
                         {
-                            //check what landed on
-                            //4 way
-                            var dz = gameAsset.holes.filter(l => ( (l.x == this.x && (l.y >= this.y-32 && l.y <= this.y+32))
-                                                                || (l.y == this.y && (l.x >= this.x-32 && l.x <= this.x+32)) ));
-
-                            //8 way
-                            // var dz = gameAsset.holes.filter(l => ( (l.x*32 >= this.x-32 && l.x*32 <= this.x+32) 
-                            //                                     && (l.y*32 >= this.y-32 && l.y*32<= this.y+32) ));
-                            if(dz.length != 0){
-                                var txt = "! ".repeat(dz.length);
-                                gameAsset.Text(txt, this.x-80, this.y-64, 5, {x: 0, y: -100, z:0, sz:3}, PAL[C.pal.pickup]);
-                            }
-
-                            //mine collision
-                            if(dz.filter(l => ( l.x == this.x && l.y == this.y )).length == 1)
+                            gameAsset.assets.Add(
+                                new Grunt(this.x, this.y-1, 
+                                    {src:assets.square, col:C.col.items, size:0.1}, C.ass.null, null,false, 0 )
+                            );
+                            this.bread--;
+                            if(gameAsset.pickupTxt!=null)
                             {
-                                if(t==12 || t==13){
-                                    this.Splash();
-                                    gameAsset.scene.SetContent(this.x, this.y, 5);
-                                }
-                                else{
-                                    this.Fall();
-                                    gameAsset.scene.SetContent(this.x, this.y, 7);
-                                }
-
-                                gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
+                                gameAsset.pickupTxt=null
                             }
-
-                            if(map.colliders.over.indexOf(t) != -1){     
-                                if(t == 6 || t==7){
-                                    this.Fall();
-                                }
-                                else if(t == 4 || t == 5){//water
-                                    this.Splash();
-                                }                                
-                            }
-
-                            if(t == 0 || t==1){
-                                Sound.Play(C.sound.hop1);
-                            }
-                            else{
-                                Sound.Play(C.sound.hop2+this.alt);
-                            }
-                            this.alt = 1-this.alt;
                         }
                     }
-                //}
-                // else{
-                //     if(--this.onHold==0){
-                //         this.onHold = 0;
-                //         // this.start();   
-                //         // gameAsset.SetCamera(this);
-                //     }
-                // }
+
+                }
+                else
+                {
+                    var t = AssetUtil.HopLogic(this, 32, 12);
+                    if(!this.jumping)// landed
+                    {
+                        //check what landed on
+                        //4 way
+                        var dz = gameAsset.holes.filter(l => l.e && ( (l.x == this.x && (l.y >= this.y-32 && l.y <= this.y+32))
+                                                            || (l.y == this.y && (l.x >= this.x-32 && l.x <= this.x+32)) ));
+
+                        //8 way
+                        // var dz = gameAsset.holes.filter(l => ( (l.x*32 >= this.x-32 && l.x*32 <= this.x+32) 
+                        //                                     && (l.y*32 >= this.y-32 && l.y*32<= this.y+32) ));
+                        if(dz.length != 0){
+                            this.onHold = 1;
+                            var txt = "! ".repeat(dz.length);
+                            gameAsset.Text(txt, this.x-80, this.y-64, 5, {x: 0, y: -100, z:0, sz:3}, PAL[C.pal.pickup]);
+                            if(gameAsset.helps[2]){
+                                gameAsset.helps[2] = 0;
+                                gameAsset.pickupTxt = Util.IntTxt(HLP[2], dz.length);
+                                this.readTimer = 8;
+                            }
+                        }
+
+                        //mine collision
+                        if(dz.filter(l => ( l.x == this.x && l.y == this.y )).length == 1)
+                        {
+                            if(t==12 || t==13){
+                                this.Splash();
+                                gameAsset.scene.SetContent(this.x, this.y, 5);
+                            }
+                            else{
+                                this.Fall();
+                                gameAsset.scene.SetContent(this.x, this.y, 7);
+                            }
+                            dz[0].e = 0;
+                            //gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
+                        }
+
+                        if(map.colliders.over.indexOf(t) != -1){     
+                            if(t == 6 || t==7){
+                                this.Fall();
+                            }
+                            else if(t == 4 || t == 5){//water
+                                this.Splash();
+                            }                                
+                        }
+
+                        if(t == 0 || t==1){
+                            Sound.Play(C.sound.hop1);
+                        }
+                        else{
+                            Sound.Play(C.sound.hop2+this.alt);
+                        }
+                        this.alt = 1-this.alt;
+                    }
+                }
             }
             else{
                 if(this.count>0){
@@ -238,6 +240,16 @@
             }
         },
         Update: function(dt){
+            if(this.onHold>0){
+                this.onHold-=dt;
+            }
+            if(this.readTimer>0)
+            {
+                this.readTimer -= dt;
+                if(this.readTimer<=0){
+                    gameAsset.pickupTxt=null;
+                }
+            }
             this.x += this.dx;
             this.y += this.dy;
             
@@ -255,6 +267,7 @@
             } 
         },
         Collider: function(perps){
+            this.reading=0;
             if(this.death == 0){
                 if(this.jumping){
                     //determine if can jump
@@ -274,29 +287,32 @@
                         if(e.type == C.ass.pickup1){
                             this.stones++;
                             e.enabled = false;
-                            if(gameAsset.pickup1==0){
-                                gameAsset.pickup1 = 1;
-                                if(gameAsset.pickup2==1){
-                                    gameAsset.pickup2 = 2;
-                                }
+                            Sound.Play(C.sound.collect1);
+                            if(gameAsset.helps[0]){
+                                gameAsset.helps[0] = 0;
+                                gameAsset.pickupTxt = HLP[0];
+                                this.readTimer = 6;
                             }
                         }
                         else if(e.type == C.ass.pickup2){
                             this.bread+=3;
+                            Sound.Play(C.sound.collect1);
                             e.enabled = false;
-                            if(gameAsset.pickup2==0){
-                                gameAsset.pickup2 = 1;
-                                if(gameAsset.pickup1==1){
-                                    gameAsset.pickup1  = 2;
-                                }
+                            if(gameAsset.helps[1]){
+                                gameAsset.helps[1] = 0;
+                                gameAsset.pickupTxt = HLP[1];
+                                this.readTimer = 6;
                             }
                         }
                         else if(e.type == C.ass.sign){
-                            this.reading.wt++;
+                            this.reading=e.alt;
+                            if(gameAsset.pickupTxt!=null)
+                            {
+                                gameAsset.pickupTxt=null;
+                                this.readTimer = 0;
+                            }
                         }
                     });
-                    
-                    Sound.Play(C.sound.collect1);
                 }
             }
         },
@@ -343,6 +359,7 @@
         this.alpha = 1;
         this.stack = stack || 1;
         this.ht = 16;
+        this.alt = null;
     };
 
 Grunt.prototype = {
@@ -435,7 +452,7 @@ window.Grunt = Grunt;
                 
                 var x = this.dest.x;
                 var y = this.dest.y;
-                var dz = gameAsset.holes.filter(l => ( l.x == x) && ( l.y == y));
+                var dz = gameAsset.holes.filter(l => l.e && ( l.x == x) && ( l.y == y));
 
                 if(dz.length == 1)
                 {
@@ -446,8 +463,8 @@ window.Grunt = Grunt;
                     else{
                         gameAsset.scene.SetContent(x, y, 7);
                     }
-
-                    gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
+                    dz[0].e = 0; //disable
+                    //gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
                 }
                 else
                 {

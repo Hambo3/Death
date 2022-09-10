@@ -216,7 +216,9 @@ var Util = {
         for (var i = 0; i < spawn.length; i++) {
             var d = new Grunt(spawn[i].x*tw, spawn[i].y*tw, 
                 {src:Util.OneOf(src), col:col, size:sz||1}, tp, null,false, l );
-                d.alt = spawn[i].i;
+                d.alt = spawn[i].i !=null 
+                        ? spawn[i].i==0 ? Util.RndI(0, 5)+100 : spawn[i].i 
+                        : null;
                 items.push(d);
         }
         return items;
@@ -225,8 +227,8 @@ var Util = {
         var pt;
         do{
             pt = {
-                x:Util.RndI(10,139),
-                y:Util.RndI(10,169)
+                x:Util.RndI(20,101),
+                y:Util.RndI(11,132)
             };
             var t = scene.Content(pt.x*tw, pt.y*tw);
             var dz = assets.filter(l => (l.x == pt.x*tw && l.y == pt.y*tw) );

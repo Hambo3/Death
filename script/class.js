@@ -14,7 +14,7 @@ class Color
 
 class Display
 {
-    constructor(str, col,fade, speed) { 
+    constructor(str, col,fade, speed,p) { 
         this.chr = [];
         this.col = col;
         for (var i = 0; i < str.length; i++) {
@@ -24,6 +24,7 @@ class Display
         this.rate = speed;
         this.speed = speed;
         this.fade = fade;
+        this.pause = p;
     }    
 
     get Done(){
@@ -31,20 +32,26 @@ class Display
     }
 
     Update(dt){
-        this.rate-=dt;
-        if(this.rate < 0)
-        {
-            this.rate = this.speed;
-            if(this.index < this.chr.length){
-                this.index++;
-            }
+        if(this.pause>0){
+            this.pause-=dt;
+            return false;
         }
-        for (var i = 0; i < this.index; i++) {
-            if(this.chr[i].f > 0){
-                this.chr[i].f -= dt;
+        else{
+            this.rate-=dt;
+            if(this.rate < 0)
+            {
+                this.rate = this.speed;
+                if(this.index < this.chr.length){
+                    this.index++;
+                }
             }
+            for (var i = 0; i < this.index; i++) {
+                if(this.chr[i].f > 0){
+                    this.chr[i].f -= dt;
+                }
+            }
+            return this.index == this.chr.length;
         }
-        return this.index == this.chr.length;
     }
 
     Render(rend, pos, sz, st) { 

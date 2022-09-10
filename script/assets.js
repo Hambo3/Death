@@ -18,18 +18,20 @@
         this.dest = {x:0, y:0};
 
         this.accel = 140;  
-
+this.invincible = false;
         this.alt = 0;
         this.action = C.act.up;
         this.motion = 0;
         this.death = 0;
+        this.how = 0;
         this.lives = 1;
         this.score = 0;
         this.count = 0;
         this.onHold = 0;
-        this.hat = 40;
+        this.hatht = 40;
         this.shadow = {src:assets.tile, col:C.col.shadow};
 
+        this.goal = 0;        
         this.reading = 0;
         this.stones = 0;
         this.bread = 0;
@@ -65,16 +67,18 @@
             }
             this.x = this.home.x;
             this.y = this.home.y;
-            this.anims = [];
-            this.hat = 40;
-            var h = new Grunt(this.x, this.y, {src:assets.hat, col:C.col.hat, size:0.6}, C.ass.null);
-            h.z = this.hat;
-            this.anims.push(h);
+
+            this.hatht = 40;
+            this.hat = new Grunt(this.x, this.y, {src:assets.hat, col:C.col.hat, size:0.6}, C.ass.null);
+            this.hat.z = this.hatht;
+
             this.enabled = true;
             this.action = C.act.up;
             this.death = 0;
             gameAsset.zoomOut = 1;
             gameAsset.zoomIn = 0;
+
+            this.goal = 0;
             this.stones = 0;
             this.bread = 0;
             this.reading = 0;
@@ -90,8 +94,9 @@
             Sound.Play(C.sound.fall);
             this.reset(C.act.fall);
 
-            for(var i=0;i<this.anims.length;i++){
-                this.anims[i].mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
+            this.hat.mt = {x: Util.Rnd(60)-30, y: Util.Rnd(60)-30, z:200};
+            this.hat.onEnd = function(x, y){
+                 gameAsset.assets.Add(new Grunt(x, y, {src:assets.hat, col:C.col.hat, size:0.6}, C.ass.null));
             }
         }
 
@@ -99,8 +104,8 @@
             this.action = C.act.splash;
             Sound.Play(C.sound.splash);
             this.reset(C.act.splash);
-            this.anims[0].enabled = false;
-            this.hat = 0;
+            this.hat.enabled = false;
+            this.hatht = 0;
             this.Splish(this.x, this.y);
         }
         this.Splish = function(x, y, sz){
@@ -119,108 +124,133 @@
 
             if(this.death == 0)
             {
-                if(!this.jumping)
+                if(!this.goal)
                 {
-                    var inp = {
-                        up:Input.Up(),
-                        down:Input.Down(),
-                        left:Input.Left(),
-                        right:Input.Right(),
-                        fire1:Input.Fire1(),
-                        fire2:Input.Fire2()
-                    };
-
-                    if(inp.fire1 && this.stones>0){
-                        gameAsset.assets.Add(new Stone(this, this.x, this.y, {src:assets.square, col:C.col.items, size:0.2}, 
-                                        {x: this.action==C.act.rt ? 64 : this.action==C.act.lt ? -64 : 0, 
-                                        y: this.action==C.act.dn ? 64 : this.action==C.act.up ? -64 : 0, z:200},
-                                        {x: this.action==C.act.rt ? this.x+64 : this.action==C.act.lt ? this.x-64 : this.x, 
-                                        y: this.action==C.act.dn ? this.y+64 : this.action==C.act.up ? this.y-64 : this.y}));
-                        this.stones--;  
-                        if(gameAsset.pickupTxt!=null)
-                        {
-                            gameAsset.pickupTxt=null
-                        }
-                    }
-                    else
+                    if(!this.jumping)
                     {
-                        AssetUtil.InputLogic(inp, this, speed, 32);  
-                    }
+                        var inp = {
+                            up:Input.Up(),
+                            down:Input.Down(),
+                            left:Input.Left(),
+                            right:Input.Right(),
+                            fire1:Input.Fire1(),
+                            fire2:Input.Fire2()
+                        };
 
-
-                    if(this.jumping){                        
-                        gameAsset.firstTime = false;
-
-                        if(inp.fire2 && this.bread>0)
-                        {
-                            gameAsset.assets.Add(
-                                new Grunt(this.x, this.y-1, 
-                                    {src:assets.square, col:C.col.items, size:0.1}, C.ass.null, null,false, 0 )
-                            );
-                            this.bread--;
+                        if(inp.fire1 && this.stones>0){
+                            gameAsset.assets.Add(new Stone(this, this.x, this.y, {src:assets.square, col:C.col.rock, size:0.2}, 
+                                            {x: this.action==C.act.rt ? 64 : this.action==C.act.lt ? -64 : 0, 
+                                            y: this.action==C.act.dn ? 64 : this.action==C.act.up ? -64 : 0, z:200},
+                                            {x: this.action==C.act.rt ? this.x+64 : this.action==C.act.lt ? this.x-64 : this.x, 
+                                            y: this.action==C.act.dn ? this.y+64 : this.action==C.act.up ? this.y-64 : this.y}));
+                            this.stones--;  
                             if(gameAsset.pickupTxt!=null)
                             {
                                 gameAsset.pickupTxt=null
                             }
                         }
-                    }
+                        else
+                        {
+                            AssetUtil.InputLogic(inp, this, speed, 32);  
+                        }
 
-                }
-                else
-                {
-                    var t = AssetUtil.HopLogic(this, 32, 12);
-                    if(!this.jumping)// landed
-                    {
-                        //check what landed on
-                        //4 way
-                        var dz = gameAsset.holes.filter(l => l.e && ( (l.x == this.x && (l.y >= this.y-32 && l.y <= this.y+32))
-                                                            || (l.y == this.y && (l.x >= this.x-32 && l.x <= this.x+32)) ));
 
-                        //8 way
-                        // var dz = gameAsset.holes.filter(l => ( (l.x*32 >= this.x-32 && l.x*32 <= this.x+32) 
-                        //                                     && (l.y*32 >= this.y-32 && l.y*32<= this.y+32) ));
-                        if(dz.length != 0){
-                            this.onHold = 1;
-                            var txt = "! ".repeat(dz.length);
-                            gameAsset.Text(txt, this.x-80, this.y-64, 5, {x: 0, y: -100, z:0, sz:3}, PAL[C.pal.pickup]);
-                            if(gameAsset.helps[2]){
-                                gameAsset.helps[2] = 0;
-                                gameAsset.pickupTxt = Util.IntTxt(HLP[2], dz.length);
-                                this.readTimer = 8;
+                        if(this.jumping){                        
+                            gameAsset.firstTime = false;
+
+                            if(inp.fire2 && this.bread>0)
+                            {
+                                gameAsset.assets.Add(
+                                    new Grunt(this.x, this.y-1, 
+                                        {src:assets.square, col:C.col.bread, size:0.1}, C.ass.null, null,false, 0 )
+                                );
+                                this.bread--;
+                                if(gameAsset.pickupTxt!=null)
+                                {
+                                    gameAsset.pickupTxt=null
+                                }
                             }
                         }
 
-                        //mine collision
-                        if(dz.filter(l => ( l.x == this.x && l.y == this.y )).length == 1)
+                    }
+                    else
+                    {
+                        var t = AssetUtil.HopLogic(this, 32, 12);
+                        if(!this.jumping)// landed
                         {
-                            if(t==12 || t==13){
-                                this.Splash();
-                                gameAsset.scene.SetContent(this.x, this.y, 5);
+                            //check what landed on
+                            //4 way
+                            var dz = gameAsset.holes.filter(l => l.e && ( (l.x == this.x && (l.y >= this.y-32 && l.y <= this.y+32))
+                                                                || (l.y == this.y && (l.x >= this.x-32 && l.x <= this.x+32)) ));
+
+                            //8 way
+                            // var dz = gameAsset.holes.filter(l => ( (l.x*32 >= this.x-32 && l.x*32 <= this.x+32) 
+                            //                                     && (l.y*32 >= this.y-32 && l.y*32<= this.y+32) ));
+                            if(dz.length != 0){
+                                this.onHold = 0.6;
+                                var txt = "! ".repeat(dz.length);
+                                gameAsset.Text(txt, this.x-80, this.y-64, 5, {x: 0, y: -100, z:0, sz:3}, PAL[C.pal.pickup]);
+                                if(gameAsset.helps[2]){
+                                    gameAsset.helps[2] = 0;
+                                    gameAsset.pickupTxt = Util.IntTxt(HLP[2], dz.length);
+                                    this.readTimer = 8;
+                                }
+                            }
+if(!this.invincible){
+                            //mine collision
+                            if(dz.filter(l => ( l.x == this.x && l.y == this.y )).length == 1)
+                            {
+                                this.how = C.act.splat;
+                                if(t==12 || t==13){
+                                    this.Splash();
+                                    gameAsset.scene.SetContent(this.x, this.y, 5);
+                                }
+                                else{
+                                    this.Fall();
+                                    gameAsset.scene.SetContent(this.x, this.y, 7);
+                                }
+                                dz[0].e = 0;
+                            }
+
+                            if(map.colliders.over.indexOf(t) != -1){     
+                                if(t == 6 || t==7){
+                                    this.how = C.act.fall;
+                                    this.Fall();
+                                }
+                                else if(t == 4 || t == 5){//water
+                                    this.how = C.act.splash;
+                                    this.Splash();
+                                }                                
+                            }
+}
+                            //prince
+                            var xd = Math.abs(gameAsset.prince.x - this.x);
+                            var yd = Math.abs(gameAsset.prince.y - this.y);
+                            if(xd<64 && yd<96){
+                                this.goal = 1;
+                                this.action = C.act.up;
+
+                                if(gameAsset.helps[4]){
+                                    gameAsset.helps[4] = 0;
+                                    gameAsset.pickupTxt = HLP[4];
+                                    this.readTimer = 8;
+                                }
+                            }
+                            else if(xd<128 && yd<320){
+                                if(gameAsset.helps[3]){
+                                    gameAsset.helps[3] = 0;
+                                    gameAsset.pickupTxt = HLP[3];
+                                    this.readTimer = 8;
+                                }
+                            }
+                            if(t == 0 || t==1){
+                                Sound.Play(C.sound.hop1);
                             }
                             else{
-                                this.Fall();
-                                gameAsset.scene.SetContent(this.x, this.y, 7);
+                                Sound.Play(C.sound.hop2+this.alt);
                             }
-                            dz[0].e = 0;
-                            //gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
+                            this.alt = 1-this.alt;
                         }
-
-                        if(map.colliders.over.indexOf(t) != -1){     
-                            if(t == 6 || t==7){
-                                this.Fall();
-                            }
-                            else if(t == 4 || t == 5){//water
-                                this.Splash();
-                            }                                
-                        }
-
-                        if(t == 0 || t==1){
-                            Sound.Play(C.sound.hop1);
-                        }
-                        else{
-                            Sound.Play(C.sound.hop2+this.alt);
-                        }
-                        this.alt = 1-this.alt;
                     }
                 }
             }
@@ -253,18 +283,18 @@
             this.x += this.dx;
             this.y += this.dy;
             
-            for(var i=0;i<this.anims.length;i++){
-                if(this.anims[i].enabled){
-                    if(this.death == 0){
-                        this.anims[i].x = this.x;
-                        this.anims[i].y = this.y;
-                        this.anims[i].z = this.z+this.hat;
-                    }
-                    else{
-                        this.anims[i].Update(dt);
-                    }
+
+            if(this.hat.enabled){
+                if(this.death == 0){
+                    this.hat.x = this.x;
+                    this.hat.y = this.y;
+                    this.hat.z = this.z+this.hatht;
                 }
-            } 
+                else{
+                    this.hat.Update(dt);
+                }
+            }
+
         },
         Collider: function(perps){
             this.reading=0;
@@ -305,6 +335,7 @@
                             }
                         }
                         else if(e.type == C.ass.sign){
+                            
                             this.reading=e.alt;
                             if(gameAsset.pickupTxt!=null)
                             {
@@ -330,11 +361,8 @@
                 this.body[this.action][this.motion].src, 
                 this.body[this.action][this.motion].col+(this.death==0 ? this.lives-1 : this.lives), this.size  );    
 
-
-            for(var i=0;i<this.anims.length;i++){
-                if(this.anims[i].enabled){                  
-                    this.anims[i].Render(os, scale);
-                }
+            if(this.hat.enabled){                  
+                this.hat.Render(os, scale);
             }
         }
     };
@@ -358,8 +386,9 @@
         this.die = die;
         this.alpha = 1;
         this.stack = stack || 1;
-        this.ht = 16;
+        this.ht = 20;
         this.alt = null;
+        this.onEnd = null;
     };
 
 Grunt.prototype = {
@@ -390,6 +419,10 @@ Grunt.prototype = {
                         {
                             this.enabled = !this.die;
                             this.mt=null;
+                            if(this.onEnd)
+                            {
+                                this.onEnd(this.x, this.y);
+                            }
                         }
                     }
                 }
@@ -463,8 +496,7 @@ window.Grunt = Grunt;
                     else{
                         gameAsset.scene.SetContent(x, y, 7);
                     }
-                    dz[0].e = 0; //disable
-                    //gameAsset.holes = gameAsset.holes.filter(l => l != dz[0]);
+                    dz[0].e = 0;
                 }
                 else
                 {
@@ -476,7 +508,7 @@ window.Grunt = Grunt;
                     {
                         gameAsset.assets.Add(
                             new Grunt(x, y-1, 
-                                {src:assets.square, col:C.col.items, size:0.2}, C.ass.pickup1, null,true, 0 )
+                                {src:assets.square, col:C.col.rock, size:0.2}, C.ass.pickup1, null,true, 0 )
                         );
                     }
                 }

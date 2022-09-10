@@ -152,13 +152,13 @@ var Rendering = function (context, screen, border) {
             ctx.fillStyle = c || '#000000';
             ctx.fillRect(x, y, w, h);
         },
-        PolyTile: function(x, y, plane, coli, size){
-            if(!bounds || ((x > bounds.minx && x < bounds.maxx) && (y > bounds.miny  && y < bounds.maxy)) ) {
-                side(x, y, plane, coli, size || 1);
-                return 1;
-            }
-            return 0;
-        },
+        // PolyTile: function(x, y, plane, coli, size){
+        //     if(!bounds || ((x > bounds.minx && x < bounds.maxx) && (y > bounds.miny  && y < bounds.maxy)) ) {
+        //         side(x, y, plane, coli, size || 1);
+        //         return 1;
+        //     }
+        //     return 0;
+        // },
         PolySprite: function(x, y, poly, coli, size, alpha){
             if(poly && (!bounds || ((x > bounds.minx && x < bounds.maxx) && (y > bounds.miny  && y < bounds.maxy))) )
             {  

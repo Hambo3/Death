@@ -1,25 +1,12 @@
 (function() {
     function Game(map, level) {
         this.level = level;    
-        var i =0;
-        var set = [];
-        for (let i = 0; i < 17; i++) {
-            set.push( {src:assets.tile, col:i});
-        }
-
-        set[10].src=assets.tile1;
-        set[11].src=assets.tile1;
-        set[5].src=assets.tile2;
-        set[7].src=assets.tile2;
-        set[2].src=assets.tiler;
-        set[3].src=assets.tiler;
-        //set.push( {src:assets.tile1, col:11});  
 
         this.md = map.levels[this.level];
-        this.M = Util.Unpack(this.md.data);
+        this.M= Util.Unpack(this.md.data);
         this.maxLevel = 1;
 
-        this.scene = new MapManager(map.size, this.M, this.md.dim.width, this.md.dim.height, set);
+        this.scene = new MapManager(map.size, this.M, this.md.dim.width, this.md.dim.height, TILES);
         this.screen = {w:map.size.screen.width*map.size.tile.width, h:map.size.screen.height*map.size.tile.height};
 
         this.gameState = MODE.title;
@@ -55,7 +42,7 @@
         }
 
         this.Next = function(e){
-            if((e || !this.firstTime) && (Input.Fire1() || Input.IsSingle("Space"))){   
+            if((e || !this.firstTime) && (Input.Fire1() || Input.IsSingle(" "))){   
                 this.timer = 1;
                 return true;
             }
@@ -69,7 +56,8 @@
             this.assets = new ObjectPool(); 
             this.holes = [];
             if(full){
-                this.M = Util.Unpack(this.md.data);
+                var m = Util.Unpack(this.md.data);
+                this.M = Util.Swap(m, 2, [17,18,19,20,21,22]);
                 this.scene.Map(this.M);
             }
             var spawn = map.levels[this.level > this.maxLevel ? this.maxLevel : this.level].spawn;
@@ -180,6 +168,11 @@
             this.scene.ScrollTo(this.camera.x, this.camera.y, false);  
         };
 
+        this.Space=function(b){
+            if(b){
+                Renderer.Text("[SPACE]", 344, 500, 4,0,PAL[C.pal.title]); 
+            }
+        }
         this.reset(true);
     };
 
@@ -240,23 +233,10 @@
 
                     break;     
                 case MODE.game:
-if(Input.IsSingle("KeyI")){
+if(Input.IsSingle("i")){
     this.player.invincible = !this.player.invincible;
 }
-                    // if(Input.IsSingle("KeyI")){
-                    //     //this.zoom-=0.1;
-                    //     //Renderer.Set(this.zoom);
-                    //     //this.scene.Set(this.zoom);
-                    //     this.zoomIn = 2.5; 
-                    //     this.zoomOut = 0;
-                    // }
-                    // if(Input.IsSingle("KeyO")){
-                    //     // this.zoom+=0.1;
-                    //     // Renderer.Set(this.zoom);
-                    //     // this.scene.Set(this.zoom);
-                    //     this.zoomIn = 0; 
-                    //     this.zoomOut = 1;
-                    // }
+
                     if(this.zoomIn > 0){
                         this.zoom = Util.Lerp(this.zoom, this.zoomIn, 0.005);
                         ISO = Util.Lerp(ISO, 0.70, 0.005);
@@ -321,7 +301,7 @@ if(Input.IsSingle("KeyI")){
                 case MODE.goal:
                     if(this.TitleTxt.Update(dt))
                     {
-                        if(Input.Fire1() || Input.IsSingle("Space")){
+                        if(Input.Fire1() || Input.IsSingle(" ")){
                             this.gameState = MODE.title;
                             Renderer.Set(1);
                             this.scene.Set(1);
@@ -334,7 +314,7 @@ if(Input.IsSingle("KeyI")){
                     {
                         if(this.TitleTxt2.Update(dt))
                         {
-                            if(Input.Fire1() || Input.IsSingle("Space")){
+                            if(Input.Fire1() || Input.IsSingle(" ")){
                                 this.gameState = MODE.postInfo;
                                 this.TitleTxt = new Display(ED[this.player.how-4], PAL[C.pal.title],3, 0.03 )
                             }
@@ -434,7 +414,7 @@ if(Input.IsSingle("KeyI")){
                 Renderer.Sprite2D((i*24)+32,30,assets.levels[br>0 && i==b-1 ? br:0], C.col.man,0.7);
             } 
 if(this.player.invincible){
-Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.gameover]);
+Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.help]);
 }
 
             switch(this.gameState){
@@ -442,7 +422,7 @@ Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.gameover]);
                     Renderer.Box(0,0,this.screen.w, this.screen.h, RGB+this.scCol+")");
                     Renderer.Text("UNCERTAIN", 160, 60, 10,1,PAL[C.pal.title]);  
                     Renderer.Text("DEATH", 240, 140, 12,1,PAL[C.pal.title]);  
-                    Renderer.Text("[SPACE]", 360, 500, 4,0,PAL[C.pal.title]);                     
+                    this.Space(1);                  
                     
                     Renderer.PolySprite(400, 400, this.titleDood[0].src, this.titleDood[0].col, 2  );
                     Renderer.PolySprite(400, 400-82, assets.hat, C.col.hat, 1.2  ); 
@@ -453,12 +433,12 @@ Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.gameover]);
                     }
 
                     if(this.firstTime){
-                        Renderer.Text("  W", 240, 400, 3,1,PAL[C.pal.gameover]);
-                        Renderer.Text("A S D", 240, 440, 3,1,PAL[C.pal.gameover]);
-                        Renderer.Text("ARROWS", 450, 440, 3,1,PAL[C.pal.gameover]);
+                        Renderer.Text("  W", 240, 400, 3,1,PAL[C.pal.help]);
+                        Renderer.Text("A S D", 240, 440, 3,1,PAL[C.pal.help]);
+                        Renderer.Text("ARROWS", 450, 440, 3,1,PAL[C.pal.help]);
                     }
                     if(this.pickupTxt != null){
-                        Renderer.Text(this.pickupTxt, 240, 400, 3,1,PAL[C.pal.gameover]);
+                        Renderer.Text(this.pickupTxt, 240, 400, 3,1,PAL[C.pal.help]);
                     }
 
                     break;                
@@ -470,24 +450,19 @@ Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.gameover]);
                     Renderer.PolySprite(340, y+64, this.titleDood[1].src, this.titleDood[1].col, 2  );
 
                     this.TitleTxt.Render(Renderer,{x:60,y:100});
-                    if(!this.firstTime){
-                        Renderer.Text("[SPACE]", 360, 500, 4,0,PAL[C.pal.title]); 
-                    }
+                    this.Space(!this.firstTime);
                     break;
                 case MODE.ready:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, RGB+this.scCol+")");
                     this.TitleTxt.Render(Renderer,{x:60,y:100});
-                    if(this.TitleTxt.Done){
-                        Renderer.Text("[SPACE]", 360, 500, 4,0,PAL[C.pal.title]); 
-                    }
+                    this.Space(this.TitleTxt.Done);
                     break;
                 case MODE.deathInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, RGB+this.scCol+")");
                     this.TitleTxt.Render(Renderer,{x:60,y:100}); 
                     this.TitleTxt2.Render(Renderer,{x:160,y:240},20,1); 
-                    if(this.TitleTxt2.Done){
-                        Renderer.Text("[SPACE]", 360, 500, 4,0,PAL[C.pal.title]); 
-                    }
+
+                    this.Space(this.TitleTxt2.Done);
                     break;     
                 case MODE.postInfo:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, RGB+this.scCol+")");
@@ -513,9 +488,7 @@ Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.gameover]);
 
                     this.TitleTxt.Render(Renderer,{x:60,y:100});
 
-                    if(this.TitleTxt.Done){
-                        Renderer.Text("[SPACE]", 360, 500, 4,0,PAL[C.pal.title]); 
-                    }
+                    this.Space(this.TitleTxt.Done);
                     break;
             }
         }

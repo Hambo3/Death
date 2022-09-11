@@ -207,6 +207,14 @@ var Util = {
 
         return map;
     },
+    Swap: function(map, s, d){
+        for (var i = 0; i < map.length; i++) {
+            if(map[i]==s) {
+                    map[i] = Util.OneOf(d);
+            }
+        }
+        return map;
+    },
     IntTxt: function(txt, val){
         return txt.replace("{0}",val);
     },

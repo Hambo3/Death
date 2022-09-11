@@ -1,10 +1,10 @@
 //handles map rendering and collisons
 var MapManager = function (mapdim, mapdata, wd, ht, set) {
     var mapSize = mapdim;
-    var map = mapdata;//Util.Unpack(mapdata.data);
+    var map = mapdata;
 
-    var mapCols = wd;//mapdata.dim.width;
-    var mapRows = ht;//mapdata.dim.height;
+    var mapCols = wd;
+    var mapRows = ht;
 
     var mapWidth = mapCols * mapSize.tile.width;
     var mapHeight = mapRows * mapSize.tile.height;
@@ -53,13 +53,11 @@ var MapManager = function (mapdim, mapdata, wd, ht, set) {
                 p = map[m];                 
                 var pt = Util.IsoPoint( (c * mapSize.tile.width)*zoom, (r * mapSize.tile.height)*zoom); 
 
-                if(tileset[p].src.length){
-                    tc+=Renderer.PolySprite(
-                        pt.x-offset.x,
-                        pt.y-offset.y,
-                        tileset[p].src,
-                        tileset[p].col, 1); 
-                }
+                tc+=Renderer.PolySprite(
+                    pt.x-offset.x,
+                    pt.y-offset.y,
+                    tileset[p].src ? tileset[p].src : assets.tile,
+                    tileset[p].col, 1); 
              }
         }
     }

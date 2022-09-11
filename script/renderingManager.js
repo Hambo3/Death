@@ -52,10 +52,8 @@ var Rendering = function (context, screen, border) {
     function polygon(x, y, poly, coli, size, a){
         for(var i = 0; i < poly.length; i+=2) 
         {
-            side(x, y, poly[i+1], 
-                PAL[
-                    COLS[coli][poly[i]]
-            ], size, a);
+            var t = Array.isArray(coli) ? PAL[coli[poly[i]]] : PAL[ COLS[coli][poly[i]] ];
+            side(x, y, poly[i+1], t, size, a);
         } 
     }
 

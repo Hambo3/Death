@@ -17,6 +17,10 @@
         this.titleDood = [{src:Util.Merge([assets.hero.bodyV,assets.hero.down]), col:C.col.man},
                             {src:Util.Merge([assets.hero.bodyV,assets.hero.up]), col:C.col.man}];
 
+//options for heroine:
+//male and female options?
+//female with a beard?
+//goat?
         this.princess = {src:Util.Merge([assets.hero.bodyV,assets.hero.down,assets.hero.lips,assets.hero.hair]), col:C.col.prince};                    
         this.treasure = {src:assets.chest, col:C.col.gold}; 
         this.zoom = 1;
@@ -31,6 +35,7 @@
         this.deaths=0;
         this.time=0;
 
+//go no further warrior
         this.camera = null;
         this.SetCamera = function(p){
             this.camera = p;
@@ -75,7 +80,8 @@
 
             var col = this.md.dim.width;
             var row = this.md.dim.height;
-
+//you where warned!
+//from here on things might get a bit hairy!
             for(var r = 0; r < row; r++) 
             {
                 for(var c = 0; c < col; c++) 
@@ -134,29 +140,20 @@ this.assets.Addm(d);
             //secret holes
             //currently:
             asses = this.assets.Get();
-            for (var i = 0; i < 250; i++) {
+            for (var i = 0; i < 280; i++) {
                 var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,4,9,10,11,17,18,24], zn1);//paths are safe
                 this.holes.push({x:p.x*tw, y:p.y*tw, e:1});
-            }    
-
-            //add specials
-            this.holes.push({x:59*tw, y:109*tw, e:1});
-
-            d = Util.Spawn(spawn.bread, [assets.loaf], C.col.bread, tw, C.ass.pickup2, 0.4);
-            this.assets.Addm(d);
-
-            d = Util.Spawn(spawn.stone, [assets.square], C.col.rock, tw, C.ass.pickup1, 0.2);
-            this.assets.Addm(d);
+            }  
 
             //add some pickups to the pool
             //rock
             asses = this.assets.Get().concat(this.holes);
-            d = Util.RndSpawn(this.scene, asses, 32, [assets.square], 
+            d = Util.RndSpawn(this.scene, asses, 24, [assets.square], 
                 C.col.rock, tw, [0,1,2,3,4,9,10,11,17,18,23,24], C.ass.pickup1, zn1, 0.2);
             this.assets.Addm(d);
 
             asses = this.assets.Get().concat(this.holes);
-            d = Util.RndSpawn(this.scene, asses, 32, [assets.loaf], 
+            d = Util.RndSpawn(this.scene, asses, 24, [assets.loaf], 
                 C.col.bread, tw, [0,1,2,3,4,9,10,11,17,18,23,24], C.ass.pickup2, zn1, 0.4);
             this.assets.Addm(d);
 
@@ -253,7 +250,8 @@ this.assets.Addm(d);
 
                     break;     
                 case MODE.game:
-if(Input.IsSingle("i")){
+//behold the spell of invincibility
+if(Input.IsSingle("i") && Input.IsSingle("q")){
     this.player.invincible = !this.player.invincible;
 }
 
@@ -364,7 +362,7 @@ if(Input.IsSingle("i")){
                                 this.fadeIn = true;
     
                                 Sound.Play(C.sound.wibble);
-                                this.player.start(2);
+                                this.player.start();
                                 this.timer = 64;
                                 ISO = 0.95;
                             }

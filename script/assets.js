@@ -59,12 +59,17 @@ this.invincible = false;
             this.z = 0;
         }
         this.start = function(restart){
+            this.lives = 1;            
             if(restart){
-                if(restart>1){
-                    this.lives = 1;
-                    this.score = 0;   
-                }
-                this.recovery = 0;                         
+                //if(restart>1){
+
+                    this.score = 0;  
+                    this.goal = 0;
+                    this.treasure = 0;
+                    this.stones = 0;
+                    this.bread = 0; 
+                //}
+                //this.recovery = 0;                         
             }
             this.x = this.home.x;
             this.y = this.home.y;
@@ -79,18 +84,18 @@ this.invincible = false;
             gameAsset.zoomOut = 1;
             gameAsset.zoomIn = 0;
 
-            this.goal = 0;
-            this.treasure = 0;
-            this.stones = 0;
-            this.bread = 0;
+            // this.goal = 0;
+            // this.treasure = 0;
+            // this.stones = 0;
+            // this.bread = 0;
             this.reading = 0;
             this.readTimer = 0;
             gameAsset.pickupTxt = null;
             this.reset();
         }
-        this.LevelCompleted = function(){
-            return this.recovery == 6;
-        }
+        // this.LevelCompleted = function(){
+        //     return this.recovery == 6;
+        // }
         this.Fall = function(){
             this.action = C.act.splash ;
             Sound.Play(C.sound.fall);
@@ -228,6 +233,7 @@ if(!this.invincible){
                                     var xd = Math.abs(gameAsset.gold[i].a.x - this.x);
                                     var yd = Math.abs(gameAsset.gold[i].a.y - this.y);
                                     if(xd<64 && yd<(64)){
+                                        Sound.Play(C.sound.collect2);
                                         gameAsset.gold[i].a.enabled = 0;
                                         this.treasure ++;
                                     }
@@ -249,7 +255,7 @@ if(!this.invincible){
 
                                 if(gameAsset.helps[4]){
                                     gameAsset.helps[4] = 0;
-                                    Sound.Play(C.sound.collect1);
+                                    Sound.Play(C.sound.collect3);
                                     gameAsset.pickupTxt = HLP[this.treasure == 0 ? 5 : 4];
                                     this.readTimer = 8;
                                 }

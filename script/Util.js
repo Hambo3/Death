@@ -231,12 +231,12 @@ var Util = {
         }
         return items;
     },
-    FreePoint:function(scene, assets, tw, safe){
+    FreePoint:function(scene, assets, tw, safe, zn){
         var pt;
         do{
             pt = {
-                x:Util.RndI(20,101),
-                y:Util.RndI(11,132)
+                x:Util.RndI(zn[0],zn[2]),
+                y:Util.RndI(zn[1],zn[3])
             };
             var t = scene.Content(pt.x*tw, pt.y*tw);
             var dz = assets.filter(l => (l.x == pt.x*tw && l.y == pt.y*tw) );
@@ -244,10 +244,10 @@ var Util = {
 
         return pt;
     },
-    RndSpawn: function(scene,assets,num, src, col, tw, safe, tp, sz,l){
+    RndSpawn: function(scene,assets,num, src, col, tw, safe, tp, zn, sz,l){
         var spawn = [];
         for (var i = 0; i < num; i++) {
-            spawn.push(Util.FreePoint(scene, assets, tw, safe));
+            spawn.push(Util.FreePoint(scene, assets, tw, safe,zn));
         }
         return Util.Spawn(spawn, src, col, tw, tp, sz,l)
     }

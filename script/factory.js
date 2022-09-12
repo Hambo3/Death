@@ -3,13 +3,13 @@ var ISO = 0.95;
 var RGB ="rgba(0,0,0,";
 var C = {
     pal:{
-        white:15+16,
-        black:15+32,
+        white:31,
+        black:47,
         title:14,
-        help:14+16,
-        pickup:14+32,
-        sign:5,
-        signtxt:5+16
+        help:30,
+        pickup:46,
+        sign:21,
+        signtxt:53
     },
     col:{
         man:0,
@@ -89,7 +89,7 @@ var COLS = [
         7+48,7+32,7+16,7
     ],
     [
-        5+32,5+16,5
+        5+32,5,4+48
     ],
     [//bread
         6,6+16,6+32,15+16
@@ -114,12 +114,6 @@ var COLS = [
     9+48,9+32,9+16, 9
     ]
 ];
-// //           0      1       2     3    4       5       6      7      8      9     10     11     12     13     14     15
-// //           blu1  blu2   purp         pink    red    orng   yell          gr2    tq?    brn    flesh  whit   blck   spec
-// var PAL =[  "#134","#124","#214","#414","#413","#412","#421","#441","#341","#5a3","#144","#632","#953","#666","#000","#505",
-//             "#38a","#34a","#53a","#93a","#a38","#a34","#a53","#a93","#8a3","#5b3","#3a9","#742","#c74","#999","#222","#ff3",
-//             "#6be","#67e","#96e","#d6e","#e6b","#e67","#e96","#ed6","#be6","#5c3","#6ed","#851","#f95","#ccc","#333","#000",
-//             "#cef","#ccf","#dcf","#fcf","#fce","#fcc","#fdc","#ffc","#dfc","#5d3","#cff","#a61","#fb8","#fff","#555","#555"
 var PAL =[
 //    0      1       2     3    4       5       6      7      8      9     10     11     12     13     14     15    
     //GRN			WATR  		 BRN1   BRN2   GRL   GRD	 FLSH	GOLD   SAND   REDS	 BLU	Yell   UI   func	
@@ -131,10 +125,10 @@ var PAL =[
    
 var ST = [
 "YOU ARE WORKING LATE ONE NIGHT.|DURING A PARTICULARLY DIFFICULT GAME OF|MINESWEEPER, YOU START TO FEEL SLEEPY.",
-"YOU FIND YOURSELF IN A STRANGE PLACE.",
+"YOU DREAM OF GLORIA THE BEAUTIFUL PRINCESS|YOU MUST FIND HER.|ON YOUR QUEST YOU MUST FIND THE GOLDEN|TREASURE AND BRING IT TO HER.",
 "YOU AWAKEN. YOUR BOSS GLORIA LOOKS AT YOU.|WITH A SMILE SHE SAYS YOU CAN GO HOME|YOUVE WORKED HARD TONIGHT!",
-"YOU AWAKEN. YOUR BOSS IS STANDING THERE.|SHE SAYS YOU CAN GO, AFTER YOUVE DONE THE MONTHLY ACCOUNTING REPORT!",
-"HEROICALLY YOU RETURN. |EVERYTHING IS AS IT WAS|EVERYTHING YOU DROPPED REMAINS",
+"YOU AWAKEN. YOUR BOSS IS STANDING THERE.|SHE SAYS YOU CAN GO, AFTER YOUVE DONE THE|MONTHLY ACCOUNTING REPORT!",
+"HEROICALLY YOU RETURN.|EVERYTHING IS AS IT WAS|EVERYTHING YOU DROPPED REMAINS",
 "LEAVE THIS NIGHTMARE AND|RETURN TO YOUR LIFE OF REPORTS|AND TABULAR LISTS OF DATA",
 "CONTINUE THE QUEST FOR|RICHES AND PRINCESSES.|OR JUST A PRINCESS WILL DO"
 ];
@@ -142,7 +136,8 @@ var ST = [
 var ED = [
     "APART FROM YOUR MAGIC HAT AND ALL THE WARNING|SIGNS HOW COULD YOU HAVE KNOWN|THE GROUND WAS SO UNSTABLE?|BUT YOU REMEMBER THAT FOR NEXT TIME.|YOU DID REMEMBER, RIGHT?",
     "WHAT DID YOU EXPECT?|YOU JUMPED IN THE RIVER OF DEATH!",
-    "YOU ACTUALLY JUMPED DOWN A HOLE OF DEATH?"
+    "YOU ACTUALLY JUMPED DOWN A HOLE OF DEATH?",
+    "YOU KNOW WHAT YOU DID!"
 ];
 var OV=[
     "DEATH",
@@ -152,26 +147,24 @@ var OV=[
 ];
 
 var HLP = [
-"K TO THROW ROCK",
-"HOLD L AND MOVE|TO DROP BREADCRUMB",
+"A ROCK. IT IS HEAVY WHEN IT LANDS!|[K] TO THROW",
+"BREAD. HOLD [L] AND MOVE|TO DROP BREADCRUMB",
 "YOUR MAGIC HAT SENSES DANGER!|THERE ARE {0} ADJACENT STEPS|THAT COULD LEAD TO DEATH",
-"YONDER. A BEAUTIFULL PRINCESS|STANDS BEFORE YOU|YOU MUST GO TO HER",
-"THE PRINCESS IS GRATEFULL"];
+"YONDER. A BEAUTIFULL PRINCESS|STANDS BEFORE YOU.|YOU MUST GO TO HER",
+"THE PRINCESS THANKS YOU.|YOU SHOW HER THE TREASURE YOU HAVE|BROUGHT AND YOU WALK OFF|INTO THE SUNSET TOGETHER",
+"YOU EXPLAIN WHY YOU DIDNT BRING|TREASURE. SHE GIVES YOU A POLITE|YET DISAPPOINTED SMILE!",
+"THERE IS TREASURE HERE!"];
 
 var signs = [
     0,
-    "YOU ARE IN A ROOM|THERE IS A ROCK HERE",
+    "THE QUEST TO FIND TREASURE|AND THE PRINCESS*|STARTS HERE|||*OR PRINCE",
+    "THE FLOORS ARE UNEVEN HERE|ONE STEP CAN LEAD TO|INSTANT DEATH!",    
+    "LOOK FOR OBJECTS ON THE WAY|TO AID IN YOUR QUEST",
     "THE FLOORS ARE UNEVEN HERE|ONE STEP CAN LEAD TO|INSTANT DEATH!",
-    "FIND THE PRINCESS*|THERE IS TREASURE HERE|||*OR PRINCE",
     "PRINCESSES LIKE SHINY THINGS|DONT TURN UP EMPTY HANDED!",
-    "SMOKE FAGS"
-];
-var rnds =[
-"YOU HAVE DIED OF DYSENTERY",
-"ALL YOUR BASES ARE BELONG TO US",
-"GO NORTH",
-"GO WEST",
-"BEWARE TROLLS"
+    "PATHS ARE SAFE!",
+    "THE DUNGEON OF DEATH|YOU BROUGHT TREASURE|I HOPE?",
+    "THE DUNGEON OF DEATH|DEATH OR GLORY AWAITS|DONT TURN UP EMPTY|HANDED"
 ];
 
 var assets ={   
@@ -228,7 +221,6 @@ var assets ={
     tilea:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-13,-15,0,15,-13,0,14,14,0,-15,13,0]],
     tileb:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-15,-13,0,15,-15,0,12,14,0,-12,13,0]],
     tilec:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-14,-13,0,14,-14,0,6,-1,0,-3,4,0,-7,13,0,-15,14,0],1,[7,1,0,14,-10,0,14,14,0,-6,14,0,-2,5,0]],
-//tiler:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-14,-11,0,-13,-13,0,-11,-14,0,11,-14,0,13,-13,0,14,-11,0,14,11,0,13,13,0,11,14,0,-11,14,0,-13,13,0,-14,11,0]],
     tilef:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-15,-15,0,15,-15,0,15,15,0,-15,15,0]],
     tileh:[0,[-16,-16,0,16,-16,0,16,16,0,-16,16,0],1,[-11,16,0,-16,16,0,-16,-16,0]],
     table:[1,[31,16,0,27,16,0,27,16,-16,31,16,-16],0,[31,12,0,31,16,0,31,16,-16,31,12,-16],1,[-27,16,0,-31,16,0,-31,16,-16,-27,16,-16],0,[-27,12,0,-27,16,0,-27,16,-16,-27,12,-16],1,[31,-12,0,27,-12,0,27,-12,-16,31,-12,-16],0,[31,-16,0,31,-12,0,31,-12,-16,31,-16,-16],0,[-32,-16,-16,32,-16,-16,32,16,-16,-32,16,-16],2,[-32,-16,-17,32,-16,-17,32,16,-17,-32,16,-17]],
@@ -246,21 +238,39 @@ var assets ={
 var TILES = [
     {src:0, col: [0]},
     {src:0, col:[0+16]},
-    {src:0, col:[6+32]},   //??
-    {src:0, col:[6+48]},       //??
-    {src:0, col:[2+16]},
-    {src:assets.tileh, col:[2+16,2+48]},
-    {src:0, col:[4+16]},
-    {src:assets.tileh, col:[4+16,4+48]},
-    {src:0, col: [0]},
-    {src:0, col:[0+16] },
-    {src:assets.tilef, col:[6+48, 7]},
-    {src:assets.tilef, col:[6+48, 7]},
-    {src:0, col:[5]},
-    {src:0, col:[5+16]},
-    {src:0, col: [0+16]},
-    {src:0, col:[0]},
-    {src:0, col: [7]},
+    {src:0, col:[0+32]},
+    {src:0, col:[0+48]},
+    {src:0, col: [1]},//4
+
+    {src:0, col: [2]},
+    {src:0, col: [2+16]},
+    {src:0, col: [2+32]},
+    {src:assets.tileh, col:[2+16,2+48]},//8
+
+    {src:0, col: [10]},
+    {src:0, col: [10+16]},
+    {src:0, col: [10+32]},//11
+
+    {src:0, col: [16]},
+    {src:0, col: [0+48]},
+    {src:0, col: [2+16]},//14
+
+    {src:0, col: [4+16]},
+    {src:assets.tileh, col:[4+16,4+48]},//16
+
+    {src:0, col: [5]},
+    {src:0, col: [5+16]},
+
+    {src:0, col: [7]},//19 wall
+
+    {src:0, col: [0+16]},  //tree spawn
+    {src:0, col:[0+48]},
+    {src:0, col:[0+32]},
+
+    {src:0, col: [6+32]},//path
+    {src:assets.tilef, col:[6+16,6+48]},//floor
+    {src:0, col:[0+16]}, //25 safe zone
+
     {src:assets.tilea, col: [0+16, 6+32]},
     {src:assets.tileb, col: [0+16, 6+32]},
     {src:assets.tilec, col: [0+16, 6+32]},
@@ -486,48 +496,6 @@ var FONT = {
     '3':[
         [1,1,1],
         [0,0,1],
-        [1,1,1],
-        [0,0,1],
-        [1,1,1]
-    ],
-    '4':[
-        [1,0,1],
-        [1,0,1],
-        [1,1,1],
-        [0,0,1],
-        [0,0,1]
-    ],
-    '5':[
-        [1,1,1],
-        [1,0,0],
-        [1,1,1],
-        [0,0,1],
-        [1,1,1]
-    ],
-    '6':[
-        [1,1,1],
-        [1,0,0],
-        [1,1,1],
-        [1,0,1],
-        [1,1,1]
-    ],
-    '7':[
-        [1,1,1],
-        [0,0,1],
-        [0,0,1],
-        [0,0,1],
-        [0,0,1]
-    ],
-    '8':[
-        [1,1,1],
-        [1,0,1],
-        [1,1,1],
-        [1,0,1],
-        [1,1,1]
-    ],
-    '9':[
-        [1,1,1],
-        [1,0,1],
         [1,1,1],
         [0,0,1],
         [1,1,1]

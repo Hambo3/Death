@@ -31,7 +31,8 @@ this.invincible = false;
         this.hatht = 40;
         this.shadow = {src:assets.tile, col:C.col.shadow};
 
-        this.goal = 0;        
+        this.goal = 0; 
+        this.treasure = 0;       
         this.reading = 0;
         this.stones = 0;
         this.bread = 0;
@@ -79,6 +80,7 @@ this.invincible = false;
             gameAsset.zoomIn = 0;
 
             this.goal = 0;
+            this.treasure = 0;
             this.stones = 0;
             this.bread = 0;
             this.reading = 0;
@@ -183,9 +185,6 @@ this.invincible = false;
                             var dz = gameAsset.holes.filter(l => l.e && ( (l.x == this.x && (l.y >= this.y-32 && l.y <= this.y+32))
                                                                 || (l.y == this.y && (l.x >= this.x-32 && l.x <= this.x+32)) ));
 
-                            //8 way
-                            // var dz = gameAsset.holes.filter(l => ( (l.x*32 >= this.x-32 && l.x*32 <= this.x+32) 
-                            //                                     && (l.y*32 >= this.y-32 && l.y*32<= this.y+32) ));
                             if(dz.length != 0){
                                 this.onHold = 0.6;
                                 var txt = "! ".repeat(dz.length);
@@ -201,53 +200,72 @@ if(!this.invincible){
                             if(dz.filter(l => ( l.x == this.x && l.y == this.y )).length == 1)
                             {
                                 this.how = C.act.splat;
-                                if(t==12 || t==13){
+                                if(t==17 || t==18){//bridge so must be water
                                     this.Splash();
-                                    gameAsset.scene.SetContent(this.x, this.y, 5);
+                                    gameAsset.scene.SetContent(this.x, this.y, 6);
                                 }
                                 else{
                                     this.Fall();
-                                    gameAsset.scene.SetContent(this.x, this.y, 7);
+                                    gameAsset.scene.SetContent(this.x, this.y, 16);
                                 }
                                 dz[0].e = 0;
                             }
 
                             if(map.colliders.over.indexOf(t) != -1){     
-                                if(t == 6 || t==7){
+                                if(t == 15 || t==16){
                                     this.how = C.act.fall;
                                     this.Fall();
                                 }
-                                else if(t == 4 || t == 5){//water
+                                else if(t>4 && t<9){//water
                                     this.how = C.act.splash;
                                     this.Splash();
                                 }                                
                             }
 }
+                            //gold
+                            for(var i=0;i<2;i++){
+                                if(gameAsset.gold[i].a.enabled){
+                                    var xd = Math.abs(gameAsset.gold[i].a.x - this.x);
+                                    var yd = Math.abs(gameAsset.gold[i].a.y - this.y);
+                                    if(xd<64 && yd<(64)){
+                                        gameAsset.gold[i].a.enabled = 0;
+                                        this.treasure ++;
+                                    }
+                                    else if(xd<(10*32) && yd<(10*32)){
+                                        if(gameAsset.gold[i].f){
+                                            gameAsset.gold[i].f = 0;
+                                            gameAsset.pickupTxt = HLP[6];
+                                            this.readTimer = 8;
+                                        }
+                                    }
+                                }
+                            }
                             //prince
                             var xd = Math.abs(gameAsset.prince.x - this.x);
                             var yd = Math.abs(gameAsset.prince.y - this.y);
-                            if(xd<64 && yd<96){
+                            if(xd<64 && yd<(96)){
                                 this.goal = 1;
                                 this.action = C.act.up;
 
                                 if(gameAsset.helps[4]){
                                     gameAsset.helps[4] = 0;
-                                    gameAsset.pickupTxt = HLP[4];
+                                    Sound.Play(C.sound.collect1);
+                                    gameAsset.pickupTxt = HLP[this.treasure == 0 ? 5 : 4];
                                     this.readTimer = 8;
                                 }
                             }
-                            else if(xd<128 && yd<320){
+                            else if(xd<(8*32) && yd<(11*32)){
                                 if(gameAsset.helps[3]){
                                     gameAsset.helps[3] = 0;
                                     gameAsset.pickupTxt = HLP[3];
                                     this.readTimer = 8;
                                 }
                             }
-                            if(t == 0 || t==1){
-                                Sound.Play(C.sound.hop1);
+                            if(t == 23 || t == 24 || (t>25)){
+                                Sound.Play(C.sound.hop2+this.alt);                               
                             }
                             else{
-                                Sound.Play(C.sound.hop2+this.alt);
+                                Sound.Play(C.sound.hop1);
                             }
                             this.alt = 1-this.alt;
                         }
@@ -334,8 +352,7 @@ if(!this.invincible){
                                 this.readTimer = 6;
                             }
                         }
-                        else if(e.type == C.ass.sign){
-                            
+                        else if(e.type == C.ass.sign){                            
                             this.reading=e.alt;
                             if(gameAsset.pickupTxt!=null)
                             {
@@ -490,21 +507,21 @@ window.Grunt = Grunt;
                 if(dz.length == 1)
                 {
                     var t = gameAsset.scene.Content(x, y);
-                    if(t==12 || t==13){
-                        gameAsset.scene.SetContent(x, y, 4);                        
+                    if(t==17 || t==18){//bridge so must be water
+                        gameAsset.scene.SetContent(x, y, 6);                        
                     }
                     else{
-                        gameAsset.scene.SetContent(x, y, 7);
+                        gameAsset.scene.SetContent(x, y, 16);
                     }
                     dz[0].e = 0;
                 }
                 else
                 {
                     var t = gameAsset.scene.Content(x, y);
-                    if(t==4 || t==5){
+                    if(t>4 && t<9){//water
                         this.parent.Splish(x, y, true);
                     }
-                    else if(t!=6 && t!=7)
+                    else if(t!=15 && t!=16)
                     {
                         gameAsset.assets.Add(
                             new Grunt(x, y-1, 

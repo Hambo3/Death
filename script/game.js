@@ -24,8 +24,10 @@
         this.zoomIn = 0;
         this.zoomOut = 0;
         this.firstTime = true;
+
         this.pickupTxt = null;
         this.helps = [1,1,1,1,1];
+        this.hows = [0,0,0];
         this.deaths=0;
         this.time=0;
 
@@ -41,6 +43,12 @@
             this.assets.Add(p);
         }
 
+        this.ResetMap = function(){
+            var m = Util.Unpack(this.md.data);
+            this.M = Util.Swap(m, 23, [26,27,28,29,30,31]);
+            this.scene.Map(this.M);
+        }
+
         this.Next = function(e){
             if((e || !this.firstTime) && (Input.Fire1() || Input.IsSingle(" "))){   
                 this.timer = 1;
@@ -53,12 +61,13 @@
             Renderer.Set(this.zoom);
             this.scene.Set(this.zoom);
 
+            this.helps[3]=1;
+            this.helps[4]=1;
+            this.deaths=0;
             this.assets = new ObjectPool(); 
             this.holes = [];
             if(full){
-                var m = Util.Unpack(this.md.data);
-                this.M = Util.Swap(m, 2, [17,18,19,20,21,22]);
-                this.scene.Map(this.M);
+                this.ResetMap();
             }
             var spawn = map.levels[this.level > this.maxLevel ? this.maxLevel : this.level].spawn;
             var tw = map.size.tile.width;
@@ -77,11 +86,11 @@
                     var pt = { x:(c * tw)*1, y:(r * th)*1 };    
 
                     var a=null,cl,n = null,typ = C.ass.hard;
-                    if(p == 14 || p == 15){
+                    if(p > 19 & p < 23){
                         a = Util.OneOf([assets.tree1, assets.tree2]);
                         cl = C.col.tree;
                     }
-                    if(p == 16){
+                    if(p == 19){
                         a = Util.OneOf([assets.wall1,assets.wall2]);
                         cl = C.col.wall;
                         n = 4;
@@ -98,33 +107,37 @@
 
             var d = Util.Spawn(spawn.wall, [assets.wall1,assets.wall2], C.col.wall, tw, C.ass.wall, null, 4);
             this.assets.Addm(d);
-            d= Util.Spawn(spawn.tree, [assets.tree1, assets.tree2], C.col.tree, tw, C.ass.hard);
-            this.assets.Addm(d);
+//??might not need
+d= Util.Spawn(spawn.tree, [assets.tree1, assets.tree2], C.col.tree, tw, C.ass.hard);
+this.assets.Addm(d);
+
             d = Util.Spawn(spawn.sign, [assets.sign], C.col.sign, tw, C.ass.sign);
             this.assets.Addm(d);
 
+            var zn1 = [20,11,101,125];
+            var zones = [80,[46,66,72,92], 40,[75,104,101,124], 16,[48,107,59,120]];
+            
+            //zones 
+            for(var i = 0; i < 6; i+=2){            
+                var asses = this.assets.Get();
+                d = Util.RndSpawn(this.scene, asses, zones[i], [assets.tree1, assets.tree2], 
+                    C.col.tree, tw, [0,1,2,3,4], C.ass.hard, zones[i+1]);
+                this.assets.Addm(d);
+            }
+            
+
+            //randoms
             var asses = this.assets.Get();
-            d = Util.RndSpawn(this.scene, asses, 64, [assets.tree1, assets.tree2], C.col.tree, tw, [0,1], C.ass.hard);
+            d = Util.RndSpawn(this.scene, asses, 64, [assets.tree1, assets.tree2], 
+                C.col.tree, tw, [0,1,2,3,4], C.ass.hard, zn1);
             this.assets.Addm(d);
             //secret holes
             //currently:
             asses = this.assets.Get();
-            for (var i = 0; i < 400; i++) {
-                //var p = {x:59, y:92};//
-                var p = Util.FreePoint(this.scene, asses, tw, [0,1,10,12,13]);//paths are safe
+            for (var i = 0; i < 250; i++) {
+                var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,4,9,10,11,17,18,24], zn1);//paths are safe
                 this.holes.push({x:p.x*tw, y:p.y*tw, e:1});
             }    
-
-            //var p = this.holes.push({x:59*tw, y:92*tw});
-            //    asses.push(p);
-
-            //DEBUG      
-            // for (var i = 0; i < 200; i++) {
-            //     d = new Grunt(this.holes[i].x*32, this.holes[i].y*32, {src:assets.square, col:C.col.rock,size:1}, C.ass.pickup);
-            //     d.enabled = true;
-            //     this.assets.Add(d);
-            // }
-            //this.holes.push({x:28,y:45});
 
             //add specials
             this.holes.push({x:59*tw, y:109*tw, e:1});
@@ -138,11 +151,13 @@
             //add some pickups to the pool
             //rock
             asses = this.assets.Get().concat(this.holes);
-            d = Util.RndSpawn(this.scene, asses, 32, [assets.square], C.col.rock, tw, [0,1,2,3,10,12,13], C.ass.pickup1, 0.2);
+            d = Util.RndSpawn(this.scene, asses, 32, [assets.square], 
+                C.col.rock, tw, [0,1,2,3,4,9,10,11,17,18,23,24], C.ass.pickup1, zn1, 0.2);
             this.assets.Addm(d);
 
             asses = this.assets.Get().concat(this.holes);
-            d = Util.RndSpawn(this.scene, asses, 32, [assets.loaf], C.col.bread, tw, [0,1,2,3,10,12,13], C.ass.pickup2, 0.4);
+            d = Util.RndSpawn(this.scene, asses, 32, [assets.loaf], 
+                C.col.bread, tw, [0,1,2,3,4,9,10,11,17,18,23,24], C.ass.pickup2, zn1, 0.4);
             this.assets.Addm(d);
 
             if(full){
@@ -153,16 +168,21 @@
 
             // //princess
             var pp = Util.OneOf(spawn.prince);
-            this.prince = new Grunt(52*32,84*32,
-                //pp.x*32, pp.y*32, 
+            this.prince = new Grunt(
+                pp.x*32, pp.y*32, 
                 {src:this.princess.src, col:this.princess.col,size:1}, C.ass.hard);
             this.prince.enabled = true;
             this.assets.Add(this.prince); 
-            // //treasure
-            pp = Util.OneOf(spawn.gold);
-            d = new Grunt(pp.x*32, pp.y*32, {src:this.treasure.src, col:this.treasure.col,size:1}, C.ass.hard);
-            d.enabled = true;
-            this.assets.Add(d); 
+
+            // //treasure 2 x??
+            this.gold = [];
+            spawn.gold.sort(() => Math.random() - 0.5);
+            for (var i = 0; i < 2; i++) {
+                this.gold[i] = {f:1,a:new Grunt(spawn.gold[i].x*32, spawn.gold[i].y*32, {src:this.treasure.src, 
+                    col:this.treasure.col,size:1}, C.ass.hard)};
+                this.gold[i].a.enabled = true;
+                this.assets.Add(this.gold[i].a); 
+            }
 
             this.SetCamera(this.player);
             this.scene.ScrollTo(this.camera.x, this.camera.y, false);  
@@ -269,10 +289,11 @@ if(Input.IsSingle("i")){
                     if(this.player.death){
                         if(this.player.death == C.act.dead){
                             this.timer = 64;
+                            this.deaths++;
                             this.gameState = MODE.deathInfo;
                             this.fadeOut = true;
-                            this.TitleTxt = new Display(OV[this.player.how-3], PAL[C.pal.title],3, 0.03 );
-                            this.TitleTxt2 = new Display(OV[0], PAL[C.pal.title],3, 0.005 );
+                            this.TitleTxt = new Display(OV[this.player.how-3], PAL[C.pal.title],0.6, 0.03 );
+                            this.TitleTxt2 = new Display(OV[0], PAL[C.pal.title],1.2, 0.005 );
                         }
                         else{
                             this.zoomIn = 2.5;
@@ -282,7 +303,7 @@ if(Input.IsSingle("i")){
 
                     if(this.player.goal == 1){
                         this.player.goal = 2;
-                        this.timer = 190;
+                        this.timer = 340;
                     }
                     else if(this.player.goal == 2){
                         this.zoomIn = 2.5;
@@ -294,7 +315,8 @@ if(Input.IsSingle("i")){
                             this.gameState = MODE.goal;
                             this.scCol = 1; 
                             //?? win state
-                            this.TitleTxt = new Display(ST[2], PAL[C.pal.title],3, 0.03 );
+                            this.TitleTxt = new Display(ST[this.player.treasure==0?3:2], 
+                                PAL[C.pal.title],3, 0.03 );
                         }  
                     }
                     break; 
@@ -316,7 +338,9 @@ if(Input.IsSingle("i")){
                         {
                             if(Input.Fire1() || Input.IsSingle(" ")){
                                 this.gameState = MODE.postInfo;
-                                this.TitleTxt = new Display(ED[this.player.how-4], PAL[C.pal.title],3, 0.03 )
+                                var t = this.hows[this.player.how-4] ? 3 : this.player.how-4;
+                                this.TitleTxt = new Display(ED[t], PAL[C.pal.title],0.1, 0.01 );
+                                this.hows[this.player.how-4] = 1;
                             }
                         }
                     }
@@ -333,11 +357,21 @@ if(Input.IsSingle("i")){
                         if(Input.Right()){
                             //reset holes
                             this.holes.forEach(h => {h.e = 1});
-                            this.M = Util.Unpack(this.md.data);
-                            this.scene.Map(this.M);
+                            this.ResetMap();
                             ISO = 0.95;
-                            this.gameState = MODE.ready;
-                            this.TitleTxt = new Display(ST[4], PAL[C.pal.title],3, 0.03, 1.2 );
+                            if(this.deaths>1){
+                                this.gameState = MODE.game;
+                                this.fadeIn = true;
+    
+                                Sound.Play(C.sound.wibble);
+                                this.player.start(2);
+                                this.timer = 64;
+                                ISO = 0.95;
+                            }
+                            else{
+                                this.gameState = MODE.ready;
+                                this.TitleTxt = new Display(ST[4], PAL[C.pal.title],0.1, 0.01, 0.5 );
+                            }
                         }
                     }
                     break;
@@ -395,23 +429,24 @@ if(Input.IsSingle("i")){
 
             if(this.player.reading){
                 Renderer.Box(200,400,380, 200, PAL[C.pal.sign]);   
-                Renderer.Text(
-                    this.player.reading>99 
-                    ? rnds[this.player.reading-100]
-                    : signs[this.player.reading], 220, 420, 3, 0,PAL[C.pal.signtxt]);  
+                Renderer.Text(signs[this.player.reading], 220, 420, 3, 0,PAL[C.pal.signtxt]);  
             }
 
             Renderer.Box(0,0,this.screen.w, 48, RGB+"0.7)");
 
+            for (var i = 0; i < this.player.treasure; i++) {
+                Renderer.Sprite2D(760-(i*32),20,assets.lives, C.col.gold,1.5);
+            }
+
             for (var i = 0; i < this.player.stones; i++) {
-                Renderer.Sprite2D((i*16)+32,10,assets.lives, C.col.man,0.7);
+                Renderer.Sprite2D((i*16)+32,10,assets.lives, C.col.rock,0.7);
             }
 
             var b = parseInt(this.player.bread/3);
             var br = parseInt(this.player.bread%3);
             b=br>0?b+1:b;
             for (var i = 0; i < b; i++) {
-                Renderer.Sprite2D((i*24)+32,30,assets.levels[br>0 && i==b-1 ? br:0], C.col.man,0.7);
+                Renderer.Sprite2D((i*24)+32,30,assets.levels[br>0 && i==b-1 ? br:0], C.col.bread,0.7);
             } 
 if(this.player.invincible){
 Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.help]);
@@ -420,8 +455,8 @@ Renderer.Text("X", 240, 10, 3,1,PAL[C.pal.help]);
             switch(this.gameState){
                 case MODE.title:
                     Renderer.Box(0,0,this.screen.w, this.screen.h, RGB+this.scCol+")");
-                    Renderer.Text("UNCERTAIN", 160, 60, 10,1,PAL[C.pal.title]);  
-                    Renderer.Text("DEATH", 240, 140, 12,1,PAL[C.pal.title]);  
+                    Renderer.Text("DEATH OR", 160, 60, 12,1,PAL[C.pal.title]);  
+                    Renderer.Text(" GLORIA", 160, 140, 12,1,PAL[C.pal.title]);  
                     this.Space(1);                  
                     
                     Renderer.PolySprite(400, 400, this.titleDood[0].src, this.titleDood[0].col, 2  );

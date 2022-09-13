@@ -140,7 +140,7 @@ this.assets.Addm(d);
             //secret holes
             //currently:
             asses = this.assets.Get();
-            for (var i = 0; i < 280; i++) {
+            for (var i = 0; i < 320; i++) {
                 var p = Util.FreePoint(this.scene, asses, tw, [0,1,2,3,4,9,10,11,17,18,24], zn1);//paths are safe
                 this.holes.push({x:p.x*tw, y:p.y*tw, e:1});
             }  
